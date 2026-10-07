@@ -1,22 +1,9 @@
 /**
- * Script used during development to insert
- * the initial services and counters.
+ * Inserts the sample configuration into an empty database.
  *
- * It is not executed by the server and is not required
- * to run the project once the delivered database
- * already contains the initial configuration.
- *
- * Run from the server folder on existing, empty tables.
- * Service times are sample estimates expressed in minutes.
- * Counter assignments are sample configuration.
+ * Called by db.js after the tables have been created.
+ * Existing configuration and tickets are preserved.
  */
-
-import sqlite from "sqlite3";
-
-const db = new sqlite.Database("oqms.sqlite", (err) => {
-    if (err) throw err;
-});
-
 const services = [
     { id: 1, name: "Postal Payment Slips (up to 5)", serviceTime: 5 },
     {
@@ -60,84 +47,120 @@ const counters = [
 ];
 
 const counterServices = [
-    // Counter 1: payment slips, payments, mail and parcels.
+    // Counter 1: Postal Payment Slips (up to 5); Deposits, Withdrawals, F24, Top-ups and Other Payments; Mail and Parcels.
     { counterId: 1, serviceId: 1 },
     { counterId: 1, serviceId: 2 },
     { counterId: 1, serviceId: 3 },
 
-    // Counter 2: payment slips, payments, savings products.
+    // Counter 2: Postal Payment Slips (up to 5); Deposits, Withdrawals, F24, Top-ups and Other Payments; Postal Savings Bonds and Savings Books.
     { counterId: 2, serviceId: 1 },
     { counterId: 2, serviceId: 2 },
     { counterId: 2, serviceId: 6 },
 
-    // Counter 3: mail, Postepay cards, energy and phone services.
+    // Counter 3: Mail and Parcels; Postepay Cards, Energy and Phone Services.
     { counterId: 3, serviceId: 3 },
     { counterId: 3, serviceId: 4 },
 
-    // Counter 4: public administration, SPID, residence permits.
+    // Counter 4: Public Administration Services - Polis; SPID; Residence Permits.
     { counterId: 4, serviceId: 5 },
     { counterId: 4, serviceId: 9 },
     { counterId: 4, serviceId: 10 },
 
-    // Counter 5: savings, insurance, accounts and other requests.
+    // Counter 5: Postal Savings Bonds and Savings Books; Motor Insurance; Current Accounts, Loans, Investments and Insurance; Other.
     { counterId: 5, serviceId: 6 },
     { counterId: 5, serviceId: 7 },
     { counterId: 5, serviceId: 8 },
     { counterId: 5, serviceId: 11 }
 ];
 
-// Execute queries in order: associations require existing services and counters.
-db.serialize(() => {
-    db.run("PRAGMA foreign_keys = ON", (err) => {
-        if (err) throw err;
+function runQuery(db, sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, (err) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve();
+        });
+    });
+}
+
+export async function initializeData(db) {
+    const counts = await new Promise((resolve, reject) => {
+        const sql = `
+            SELECT
+                (SELECT COUNT(*) FROM Service) AS services,
+                (SELECT COUNT(*) FROM Counter) AS counters,
+                (SELECT COUNT(*) FROM CounterService) AS associations,
+                (SELECT COUNT(*) FROM Ticket) AS tickets
+        `;
+
+        db.get(sql, [], (err, row) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve(row);
+        });
     });
 
-    for (const service of services) {
-        const sql = `
-            INSERT INTO Service(id, name, service_time)
-            VALUES (?, ?, ?)
-        `;
-
-        db.run(sql, [service.id, service.name, service.serviceTime], (err) => {
-            if (err)
-                console.error(err.message);
-            else
-                console.log(`Created service ${service.name}`);
-        });
+    if (
+        counts.services > 0 &&
+        counts.counters > 0 &&
+        counts.associations > 0
+    ) {
+        console.log("Existing configuration preserved.");
+        return;
     }
 
-    for (const counter of counters) {
-        const sql = `
-            INSERT INTO Counter(id, name)
-            VALUES (?, ?)
-        `;
-
-        db.run(sql, [counter.id, counter.name], (err) => {
-            if (err)
-                console.error(err.message);
-            else
-                console.log(`Created counter ${counter.name}`);
-        });
+    if (
+        counts.services > 0 ||
+        counts.counters > 0 ||
+        counts.associations > 0 ||
+        counts.tickets > 0
+    ) {
+        throw new Error(
+            "Initial configuration is incomplete. Check the database."
+        );
     }
 
-    for (const association of counterServices) {
-        const sql = `
-            INSERT INTO CounterService(counter_id, service_id)
-            VALUES (?, ?)
-        `;
+    await runQuery(db, "BEGIN TRANSACTION");
 
-        db.run(sql, [association.counterId, association.serviceId], (err) => {
-            if (err)
-                console.error(err.message);
-            else
-                console.log(
-                    `Assigned service ${association.serviceId} to counter ${association.counterId}`
-                );
-        });
+    try {
+        for (const service of services) {
+            await runQuery(
+                db,
+                `INSERT INTO Service(id, name, service_time)
+                 VALUES (?, ?, ?)`,
+                [service.id, service.name, service.serviceTime]
+            );
+        }
+
+        for (const counter of counters) {
+            await runQuery(
+                db,
+                `INSERT INTO Counter(id, name)
+                 VALUES (?, ?)`,
+                [counter.id, counter.name]
+            );
+        }
+
+        for (const association of counterServices) {
+            await runQuery(
+                db,
+                `INSERT INTO CounterService(counter_id, service_id)
+                 VALUES (?, ?)`,
+                [association.counterId, association.serviceId]
+            );
+        }
+
+        await runQuery(db, "COMMIT");
+        console.log("Initial services and counters inserted.");
+    } catch (err) {
+        await runQuery(db, "ROLLBACK");
+        throw err;
     }
+}
 
-    db.close((err) => {
-        if (err)
-            console.error(err.message);
-    });
-});
