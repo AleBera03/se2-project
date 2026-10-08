@@ -8,7 +8,8 @@ import { initializeData } from "./init-db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const DB_PATH = path.join(__dirname, "oqms.sqlite");
+const DB_FILE = process.env.NODE_ENV === "test" ? "oqms-test.sqlite" : "oqms.sqlite";
+const DB_PATH = process.env.DB_PATH ?? path.join(__dirname, DB_FILE);
 const SCHEMA_PATH = path.join(__dirname, "oqms-schema.sql");
 
 const db = new sqlite3.Database(DB_PATH);
