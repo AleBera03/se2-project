@@ -1,0 +1,37 @@
+/* Customer header */
+.customer-header p {
+    color: var(--text-secondary);
+}
+
+/* Service cards */
+.service-card {
+    border-color: var(--border-primary);
+    background-color: var(--color-white);
+}
+
+.service-card .card-title {
+    color: var(--text-primary);
+}
+
+.service-card-selected {
+    border-color: var(--color-blue);
+    background-color: var(--surface-selected);
+}
+
+/* Selected service button */
+.service-button-selected {
+    --bs-btn-bg: var(--color-blue-dark);
+    --bs-btn-border-color: var(--color-blue-dark);
+    --bs-btn-hover-bg: var(--color-blue-dark);
+    --bs-btn-hover-border-color: var(--color-blue-dark);
+    --bs-btn-active-bg: var(--color-blue-dark);
+    --bs-btn-active-border-color: var(--color-blue-dark);
+}
+
+/* Selection feedback */
+.service-selection-feedback {
+    margin-bottom: 0;
+    background-color: var(--color-blue-light);
+    border-color: var(--color-blue-light);
+    color: var(--color-blue-dark);
+}
