@@ -1,25 +1,47 @@
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+
+import { getServices } from "./dao.js";
 
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173' }));
+
+/* GENERAL MIDDLEWARE */
+
+// Parses JSON request bodies.
 app.use(express.json());
 
-import db from './db.js'
+/* CORS */
 
+const corsOptions = {
+    origin: "http://localhost:5173"
+};
 
-app.get('/api/health', (req, res) => {
+app.use(cors(corsOptions));
 
-  db.get('SELECT 1', [], (err, row) => {
-    
-  if(err){
-      return res.status(500).json({status:'Error', message: 'Database connection failed'})
+/* HEALTH */
+
+/**
+ * Checks whether the API server is reachable.
+ */
+app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+});
+
+/* SERVICES */
+
+/**
+ * Retrieves the available services.
+ */
+app.get("/api/services", async (req, res) => {
+    try {
+        const services = await getServices();
+        res.json(services);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: "Unable to retrieve services."
+        });
     }
-  
-  res.json({status:'OK', message: 'Server & database running smoothly'})
-
-  })
-
-})
+});
 
 export default app;
