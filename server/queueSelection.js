@@ -2,10 +2,9 @@
  * Choose a compatible, nonempty service queue from getCounterQueues(counterId).
  * This function never selects, updates, or assigns an individual ticket.
  * @param {Array<{serviceId:number,queueLength:number,averageServiceTime:number}>} queues
- * @param {{resolveFinalTie?:(tiedServices:Array<object>)=>object}} [options]
  * @returns {object|null} Chosen service row or null when no one is waiting.
  */
-export function selectQueue(queues, { resolveFinalTie } = {}) {
+export function selectQueue(queues) {
   if (!Array.isArray(queues)) throw new TypeError('queues must be an array');
   for (const queue of queues) {
     if (!queue || !Number.isSafeInteger(queue.serviceId) || queue.serviceId <= 0 ||
@@ -21,13 +20,8 @@ export function selectQueue(queues, { resolveFinalTie } = {}) {
   const biggest = waiting.filter(q => q.queueLength === longest);
   const shortestTime = Math.min(...biggest.map(q => q.averageServiceTime));
   const finalists = biggest.filter(q => q.averageServiceTime === shortestTime);
-  if (finalists.length === 1) return finalists[0];
-  if (typeof resolveFinalTie !== 'function') {
-    throw new Error('Final queue tie: team must agree on a deterministic tie-break rule');
-  }
-  const choice = resolveFinalTie([...finalists]);
-  if (!choice || !finalists.some(q => q.serviceId === choice.serviceId)) {
-    throw new Error('Final tie-breaker must select one of the tied services');
-  }
-  return finalists.find(q => q.serviceId === choice.serviceId);
+  // Deterministic final tie-break: choose the smallest service ID.
+  return finalists.reduce((best, current) =>
+    current.serviceId < best.serviceId ? current : best
+  );
 }
