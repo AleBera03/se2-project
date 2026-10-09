@@ -8,6 +8,7 @@ function PageHeader(props) {
 
     return (
         <header className={className}>
+            
             {kicker && (
                 <p className="text-uppercase">
                     {kicker}
@@ -25,6 +26,7 @@ function PageHeader(props) {
                     {description}
                 </p>
             )}
+
         </header>
     );
 }

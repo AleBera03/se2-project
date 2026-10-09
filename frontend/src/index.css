@@ -10,6 +10,11 @@
     --surface-base: #f5f7fb;
     --surface-selected: #f0f6ff;
     --border-primary: #dee6f2;
+
+    --font-size-xs: 0.75rem;
+    --font-size-ticket-code: 3rem;
+
+    --shadow-color-ticket: rgba(22, 52, 92, 0.08);
 }
 
 body {
