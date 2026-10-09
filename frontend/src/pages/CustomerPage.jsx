@@ -1,4 +1,4 @@
-import { Alert, Container, Stack } from "react-bootstrap";
+import { Alert, Button, Container, Stack } from "react-bootstrap";
 
 import { useCustomerLogic } from "../hooks/useCustomerLogic";
 
@@ -13,7 +13,10 @@ function CustomerPage() {
         selectedService,
         handleSelectService,
         showTicketConfirmation,
-        handleCloseTicketConfirmation
+        handleCloseTicketConfirmation,
+        ticket,
+        ticketError,
+        isGeneratingTicket
     } = useCustomerLogic();
 
     return (
@@ -30,11 +33,27 @@ function CustomerPage() {
                 {selectedService && (
                     <Alert 
                         className="service-selection-feedback"
-                        variant="primary" 
+                        variant={ticketError ? "danger" : "primary"}
                         role="status"
                     >
-                        Selected service:{" "}
-                        <span className="fw-bold">{selectedService.name}</span>
+                        {ticketError ? (
+                            <>
+                                {ticketError} Please try again.
+                                <Button
+                                    variant="link"
+                                    className="p-0 ms-2 align-baseline"
+                                    onClick={() => handleSelectService(selectedService)}
+                                    disabled={isGeneratingTicket}
+                                >
+                                    Retry
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                Selected service:{" "}
+                                <span className="fw-bold">{selectedService.name}</span>
+                            </>
+                        )}
                     </Alert>
                 )}
 
@@ -42,17 +61,14 @@ function CustomerPage() {
                     services={services}
                     selectedServiceId={selectedService?.id}
                     onSelectService={handleSelectService}
+                    isGeneratingTicket={isGeneratingTicket}
                 />
 
                 <TicketConfirmation
                     show={showTicketConfirmation}
                     onClose={handleCloseTicketConfirmation}
-                    ticket={{
-                        code: "T11",
-                        createdAt: new Date().toISOString()
-                    }}
+                    ticket={ticket}
                     service={selectedService}
-                    estimatedWaitingMinutes={16}
                 />
 
             </Stack>

@@ -20,13 +20,18 @@ function TicketConfirmation(props) {
             return;
         }
 
-        setSecondsLeft(20);
+        const resetTimeoutId = setTimeout(() => {
+            setSecondsLeft(20);
+        }, 0);
 
         const intervalId = setInterval(() => {
             setSecondsLeft((seconds) => Math.max(0, seconds - 1));
         }, 1000);
 
-        return () => clearInterval(intervalId);
+        return () => {
+            clearTimeout(resetTimeoutId);
+            clearInterval(intervalId);
+        };
     }, [show]);
 
     // Close the modal when the countdown reaches zero.
