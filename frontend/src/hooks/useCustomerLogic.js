@@ -25,15 +25,27 @@ function useCustomerLogic() {
     // State of the service selected by the customer.
     const [selectedService, setSelectedService] = useState(null);
 
+    // State of the ticket confirmation modal.
+    const [showTicketConfirmation, setShowTicketConfirmation] = useState(false);
+
     // Select the service requested by the customer.
     const handleSelectService = (service) => {
         setSelectedService(service);
+        setShowTicketConfirmation(true);
+    };
+
+    // Close the ticket confirmation and reset the selected service.
+    const handleCloseTicketConfirmation = () => {
+        setShowTicketConfirmation(false);
+        setSelectedService(null);
     };
 
     return {
         services: mockServices,
         selectedService,
-        handleSelectService
+        handleSelectService,
+        showTicketConfirmation,
+        handleCloseTicketConfirmation
     };
 }
 
