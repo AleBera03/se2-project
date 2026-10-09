@@ -58,6 +58,9 @@ export const getCounterQueues = (counterId) => {
     });
 };
 
+/**
+ * Persist a ticket with a unique code in the selected service queue.
+ */
 export const createTicket = (serviceId) => {
     return new Promise((resolve, reject) => {
         if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
