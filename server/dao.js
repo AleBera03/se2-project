@@ -57,3 +57,44 @@ export const getCounterQueues = (counterId) => {
         });
     });
 };
+
+/**
+ * Persist a ticket with a unique code in the selected service queue.
+ */
+export const createTicket = (serviceId) => {
+    return new Promise((resolve, reject) => {
+        if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
+            reject(new TypeError("serviceId must be a positive integer"));
+            return;
+        }
+
+        const insertSql = `
+            INSERT INTO Ticket (service_id)
+            VALUES (?)
+        `;
+
+        db.run(insertSql, [serviceId], function (err) {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            const newTicketId = this.lastID;
+
+            const selectSql = `
+                SELECT id, code, service_id, status, created_at
+                FROM Ticket
+                WHERE id = ?
+            `;
+
+            db.get(selectSql, [newTicketId], (err, row) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(row);
+            });
+        });
+    });
+};
