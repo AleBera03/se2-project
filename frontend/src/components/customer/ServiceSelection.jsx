@@ -1,10 +1,11 @@
-import { Button, Card, Col, Row } from "react-bootstrap";
+import { Button, Card, Col, Row, Spinner } from "react-bootstrap";
 
 function ServiceSelection(props) {
     const {
         services,
         selectedServiceId,
-        onSelectService
+        onSelectService,
+        isGeneratingTicket
     } = props;
 
     if (services.length === 0) {
@@ -41,9 +42,22 @@ function ServiceSelection(props) {
                                     }
                                     aria-pressed={isSelected}
                                     aria-label={`Select ${service.name}`}
+                                    disabled={isGeneratingTicket}
                                     onClick={() => onSelectService(service)}
                                 >
-                                    {isSelected ? "Selected" : "Select service"}
+                                    {isSelected && isGeneratingTicket ? (
+                                        <>
+                                            <Spinner
+                                                animation="border"
+                                                aria-hidden="true"
+                                                className="me-2"
+                                                size="sm"
+                                            />
+                                            Generating ticket...
+                                        </>
+                                    ) : (
+                                        isSelected ? "Selected" : "Select service"
+                                    )}
                                 </Button>
 
                             </Card.Body>
