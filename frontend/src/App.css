@@ -49,12 +49,12 @@
     border: 1px solid var(--border-primary);
     border-radius: 2px;
     color: var(--text-primary);
-    box-shadow: 0 4px 16px rgba(22, 52, 92, 0.08);
+    box-shadow: 0 4px 16px var(--shadow-color-ticket);
 }
 
 .ticket-brand {
     color: var(--color-blue-dark);
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
     font-weight: 700;
     letter-spacing: 0.08em;
 }
@@ -65,7 +65,7 @@
 
 .ticket-code {
     color: var(--color-blue-dark);
-    font-size: 3rem;
+    font-size: var(--font-size-ticket-code);
     font-weight: 700;
     overflow-wrap: anywhere;
 }
@@ -86,5 +86,5 @@
 
 .ticket-issued {
     color: var(--text-secondary);
-    font-size: 0.75rem;
+    font-size: var(--font-size-xs);
 }
