@@ -4,13 +4,16 @@ import { useCustomerLogic } from "../hooks/useCustomerLogic";
 
 import PageHeader from "../components/common/PageHeader";
 import ServiceSelection from "../components/customer/ServiceSelection";
+import TicketConfirmation from "../components/customer/TicketConfirmation";
 
 function CustomerPage() {
 
     const {
         services,
         selectedService,
-        handleSelectService
+        handleSelectService,
+        showTicketConfirmation,
+        handleCloseTicketConfirmation
     } = useCustomerLogic();
 
     return (
@@ -39,6 +42,17 @@ function CustomerPage() {
                     services={services}
                     selectedServiceId={selectedService?.id}
                     onSelectService={handleSelectService}
+                />
+
+                <TicketConfirmation
+                    show={showTicketConfirmation}
+                    onClose={handleCloseTicketConfirmation}
+                    ticket={{
+                        code: "T11",
+                        createdAt: new Date().toISOString()
+                    }}
+                    service={selectedService}
+                    estimatedWaitingMinutes={16}
                 />
 
             </Stack>
