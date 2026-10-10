@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdtemp, copyFile, writeFile, rm } from 'node:fs/promises';
@@ -11,7 +11,7 @@ import { pathToFileURL } from 'node:url';
 async function fixture() {
   const dir = await mkdtemp(join(tmpdir(), 'counter-queues-'));
   await writeFile(join(dir, 'package.json'), JSON.stringify({ type: 'module' }));
-  await copyFile(resolve('server/dao.js'), join(dir, 'dao.js'));
+  await copyFile(resolve('dao.js'), join(dir, 'dao.js'));
   await writeFile(join(dir, 'db.js'), `
     import { DatabaseSync } from 'node:sqlite';
     export const sqlite = new DatabaseSync(':memory:');
