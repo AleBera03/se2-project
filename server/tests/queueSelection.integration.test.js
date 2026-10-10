@@ -4,7 +4,12 @@ import { chooseQueueForCounter } from '../queueService.js';
 
 // fixtures: counter 1 -> services 1 (5 min), 2 (7 min); counter 2 -> services 2, 3 (15 min)
 const addWaiting = async (serviceId, count) => {
-  for (let i = 0; i < count; i++) await run('INSERT INTO Ticket (service_id) VALUES (?)', [serviceId]);
+  for (let i = 0; i < count; i++) {
+    await run(
+      'INSERT INTO Ticket (service_id, daily_number, code) VALUES (?, ?, ?)',
+      [serviceId, i + 1, `TEST-${serviceId}-${i + 1}`],
+    );
+  }
 };
 
 describe('chooseQueueForCounter with the test database', () => {
@@ -28,7 +33,11 @@ describe('chooseQueueForCounter with the test database', () => {
   it('does not count served tickets', async () => {
     await addWaiting(1, 2);
     await addWaiting(2, 1);
-    await run("INSERT INTO Ticket (service_id, status, counter_id) VALUES (2, 'served', 1), (2, 'served', 1)");
+    await run(`
+      INSERT INTO Ticket (service_id, daily_number, code, status, counter_id)
+      VALUES (2, 4, 'TEST-2-4', 'served', 1),
+             (2, 5, 'TEST-2-5', 'served', 1)
+    `);
     expect(await chooseQueueForCounter(1)).toMatchObject({ serviceId: 1, queueLength: 2 });
   });
 

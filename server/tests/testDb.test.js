@@ -14,13 +14,19 @@ describe('test database', () => {
     expect(await get('SELECT COUNT(*) AS n FROM Ticket')).toEqual({ n: 0 });
   });
 
-  it('reset removes tickets and restarts their codes from T1', async () => {
-    await run('INSERT INTO Ticket (service_id) VALUES (1), (2)');
+  it('reset removes tickets and restarts their codes from PAY-001', async () => {
+    await run(`
+      INSERT INTO Ticket (service_id, daily_number, code)
+      VALUES (1, 1, 'PAY-001'), (2, 1, 'MAIL-001')
+    `);
 
     await resetTestDb();
 
     expect(await get('SELECT COUNT(*) AS n FROM Ticket')).toEqual({ n: 0 });
-    const { lastID } = await run('INSERT INTO Ticket (service_id) VALUES (1)');
-    expect(await get('SELECT code FROM Ticket WHERE id = ?', [lastID])).toEqual({ code: 'T1' });
+    const { lastID } = await run(`
+      INSERT INTO Ticket (service_id, daily_number, code)
+      VALUES (1, 1, 'PAY-001')
+    `);
+    expect(await get('SELECT code FROM Ticket WHERE id = ?', [lastID])).toEqual({ code: 'PAY-001' });
   });
 });

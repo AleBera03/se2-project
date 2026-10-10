@@ -10,8 +10,8 @@ test('createTicket should generate a ticket with waiting status and a unique cod
     assert.strictEqual(ticket.service_id, 1, 'The service_id does not match');
     assert.strictEqual(ticket.status, 'waiting', 'The default status should be waiting');
     
-    // Verify that the code exists and starts with the letter "T"
-    assert.ok(ticket.code.startsWith('T'), 'The code must start with T');
+    // Verify the service prefix and daily progressive number.
+    assert.match(ticket.code, /^PAY-\d{3}$/, 'The code must contain the service prefix and number');
     
     // Verify that the timestamp has been generated
     assert.ok(ticket.created_at, 'The creation timestamp is missing');

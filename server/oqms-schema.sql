@@ -5,6 +5,7 @@ BEGIN TRANSACTION;
 CREATE TABLE Service (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE CHECK (length(trim(name)) > 0),
+    code TEXT NOT NULL UNIQUE CHECK (length(trim(code)) > 0),
     service_time REAL NOT NULL CHECK (service_time > 0)
 );
 
@@ -21,7 +22,9 @@ CREATE TABLE CounterService (
 
 CREATE TABLE Ticket (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    code TEXT GENERATED ALWAYS AS ('T' || id) VIRTUAL,
+    daily_number INTEGER NOT NULL DEFAULT 1 CHECK (daily_number BETWEEN 1 AND 999),
+    ticket_date TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d', 'now')),
+    code TEXT NOT NULL,
     service_id INTEGER NOT NULL REFERENCES Service(id),
     status TEXT NOT NULL DEFAULT 'waiting'
         CHECK (status IN ('waiting', 'served')),
@@ -32,7 +35,8 @@ CREATE TABLE Ticket (
         (status = 'served' AND counter_id IS NOT NULL)
     ),
     FOREIGN KEY (counter_id, service_id)
-        REFERENCES CounterService(counter_id, service_id)
+        REFERENCES CounterService(counter_id, service_id),
+    UNIQUE (service_id, ticket_date, daily_number)
 );
 
 CREATE INDEX idx_ticket_queue ON Ticket(service_id, status, created_at, id);

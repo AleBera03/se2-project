@@ -5,37 +5,37 @@
  * Existing configuration and tickets are preserved.
  */
 const services = [
-    { id: 1, name: "Postal Payment Slips (up to 5)", serviceTime: 5 },
+    { id: 1, code: "PAY", name: "Postal Payment Slips (up to 5)", serviceTime: 5 },
     {
         id: 2,
-        name: "Deposits, Withdrawals, F24, Top-ups and Other Payments",
+        code: "BANK", name: "Deposits, Withdrawals, F24, Top-ups and Other Payments",
         serviceTime: 8
     },
-    { id: 3, name: "Mail and Parcels", serviceTime: 7 },
+    { id: 3, code: "MAIL", name: "Mail and Parcels", serviceTime: 7 },
     {
         id: 4,
-        name: "Postepay Cards, Energy and Phone Services",
+        code: "CARD", name: "Postepay Cards, Energy and Phone Services",
         serviceTime: 15
     },
     {
         id: 5,
-        name: "Public Administration Services - Polis",
+        code: "ADMIN", name: "Public Administration Services - Polis",
         serviceTime: 20
     },
     {
         id: 6,
-        name: "Postal Savings Bonds and Savings Books",
+        code: "SAVE", name: "Postal Savings Bonds and Savings Books",
         serviceTime: 12
     },
-    { id: 7, name: "Motor Insurance", serviceTime: 20 },
+    { id: 7, code: "INS", name: "Motor Insurance", serviceTime: 20 },
     {
         id: 8,
-        name: "Current Accounts, Loans, Investments and Insurance",
+        code: "FIN", name: "Current Accounts, Loans, Investments and Insurance",
         serviceTime: 25
     },
-    { id: 9, name: "SPID", serviceTime: 15 },
-    { id: 10, name: "Residence Permits", serviceTime: 20 },
-    { id: 11, name: "Other", serviceTime: 10 }
+    { id: 9, code: "SPID", name: "SPID", serviceTime: 15 },
+    { id: 10, code: "PERMIT", name: "Residence Permits", serviceTime: 20 },
+    { id: 11, code: "OTHER", name: "Other", serviceTime: 10 }
 ];
 
 const counters = [
@@ -132,9 +132,9 @@ export async function initializeData(db) {
         for (const service of services) {
             await runQuery(
                 db,
-                `INSERT INTO Service(id, name, service_time)
-                 VALUES (?, ?, ?)`,
-                [service.id, service.name, service.serviceTime]
+                `INSERT INTO Service(id, code, name, service_time)
+                 VALUES (?, ?, ?, ?)`,
+                [service.id, service.code, service.name, service.serviceTime]
             );
         }
 
@@ -163,4 +163,3 @@ export async function initializeData(db) {
         throw err;
     }
 }
-
