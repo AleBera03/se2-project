@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+
+import { createTicket } from "../API/API.mjs";
 
 const mockServices = [
     { id: 1, name: "Postal Payment Slips (up to 5)" },
@@ -25,15 +27,62 @@ function useCustomerLogic() {
     // State of the service selected by the customer.
     const [selectedService, setSelectedService] = useState(null);
 
+    // State of the ticket confirmation modal.
+    const [showTicketConfirmation, setShowTicketConfirmation] = useState(false);
+    const [ticket, setTicket] = useState(null);
+    const [ticketError, setTicketError] = useState(null);
+    const [isGeneratingTicket, setIsGeneratingTicket] = useState(false);
+    const requestInProgress = useRef(false);
+
     // Select the service requested by the customer.
-    const handleSelectService = (service) => {
+    const handleSelectService = async (service) => {
+        if (requestInProgress.current) {
+            return;
+        }
+
         setSelectedService(service);
+        setTicket(null);
+        setTicketError(null);
+        setIsGeneratingTicket(true);
+        requestInProgress.current = true;
+
+        try {
+            const createdTicket = await createTicket(service.id);
+
+            setTicket({
+                ...createdTicket,
+                createdAt: createdTicket.createdAt ?? createdTicket.created_at
+            });
+            setShowTicketConfirmation(true);
+        } catch (error) {
+            setTicketError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to create ticket."
+            );
+        } finally {
+            requestInProgress.current = false;
+            setIsGeneratingTicket(false);
+        }
+    };
+
+    // Close the ticket confirmation and reset the selected service.
+    const handleCloseTicketConfirmation = () => {
+        setShowTicketConfirmation(false);
+        setSelectedService(null);
+        setTicket(null);
+        setTicketError(null);
     };
 
     return {
         services: mockServices,
         selectedService,
-        handleSelectService
+        handleSelectService,
+        showTicketConfirmation,
+        handleCloseTicketConfirmation,
+        ticket,
+        ticketError,
+        isGeneratingTicket
     };
 }
 

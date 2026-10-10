@@ -35,3 +35,56 @@
     border-color: var(--color-blue-light);
     color: var(--color-blue-dark);
 }
+
+/* Ticket confirmation */
+.ticket-modal-body {
+    background-color: var(--surface-base);
+}
+
+.ticket-confirmation {
+    width: 100%;
+    max-width: 340px;
+    margin-inline: auto;
+    background-color: var(--color-white);
+    border: 1px solid var(--border-primary);
+    border-radius: 2px;
+    color: var(--text-primary);
+    box-shadow: 0 4px 16px var(--shadow-color-ticket);
+}
+
+.ticket-brand {
+    color: var(--color-blue-dark);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.ticket-service {
+    color: var(--text-primary);
+}
+
+.ticket-code {
+    color: var(--color-blue-dark);
+    font-size: var(--font-size-ticket-code);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.ticket-details {
+    border-top: 1px dashed var(--border-primary);
+}
+
+.ticket-description {
+    color: var(--text-secondary);
+}
+
+.ticket-modal-body {
+    background-color: var(--surface-base);
+    border-bottom-left-radius: var(--bs-modal-inner-border-radius);
+    border-bottom-right-radius: var(--bs-modal-inner-border-radius);
+}
+
+.ticket-issued {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
