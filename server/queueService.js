@@ -1,4 +1,5 @@
-import { getCounterQueues } from "./dao.js";
+import { assignTicket, getCounterQueues, getFirstWaitingTicket } from "./dao.js";
+import { transaction } from "./db.js";
 
 /**
  * Read the services compatible with a counter and choose the best nonempty queue.
@@ -59,4 +60,18 @@ export function selectQueue(queues) {
     return finalists.reduce((best, current) =>
         current.serviceId < best.serviceId ? current : best
     );
+}
+
+export async function assignNextTicket(counterId) {
+    // run all in one transaction
+    return transaction(async () => {
+        const queue = await chooseQueueForCounter(counterId);
+        if (queue === null) {
+            return null;
+        }
+        let firstTicket = await getFirstWaitingTicket(queue.serviceId);
+        if (!firstTicket) return null;
+        await assignTicket(firstTicket.id, counterId);
+        return { ...firstTicket, status: 'served', counterId: counterId };
+    })
 }
