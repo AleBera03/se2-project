@@ -127,7 +127,7 @@ describe('createTicket — unit tests', () => {
     expect(db.get).toHaveBeenNthCalledWith(
       3,
       expect.any(String),
-      ['A000'],
+      ['A000', '2026-10-11'],
       expect.any(Function)
     );
 
