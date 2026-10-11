@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import db, { runAsync, transaction } from '../../db.js';
-import { createTicket } from '../../dao.js';
+import { createTicket } from '../../dao/ticket-dao.js';
 
 vi.mock('../../db.js', () => ({
   default: {
