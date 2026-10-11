@@ -1,4 +1,4 @@
-import db from "./db.js";
+import db, { runAsync } from "./db.js"
 
 /**
  * Retrieve the available services.
@@ -57,6 +57,58 @@ export const getCounterQueues = (counterId) => {
         });
     });
 };
+
+export const getFirstWaitingTicket = (serviceId) => {
+    return new Promise((resolve, reject) => {
+        if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
+            reject(new TypeError("serviceId must be a positive integer"));
+            return;
+        }
+
+        const sql = `
+            SELECT *
+            FROM Ticket
+            WHERE service_id = ? 
+            AND status = 'waiting'
+            ORDER BY created_at, id
+            LIMIT 1
+        `;
+
+        db.get(sql, [serviceId], (err, row) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve(row);
+        });
+    });
+}
+
+export async function assignTicket (ticketId, counterId) {
+    // check ticketId
+    if (!Number.isSafeInteger(ticketId) || ticketId <= 0) {
+        throw new TypeError("ticketId must be a positive integer");
+    }
+
+    // check counterId
+    if (!Number.isSafeInteger(counterId) || counterId <= 0) {
+        throw new TypeError("counterId must be a positive integer");
+    }
+
+    const sql = `
+        UPDATE Ticket
+        SET status = 'served', counter_id = ?
+        WHERE id = ?
+        AND status = 'waiting'
+    `;
+
+    const result = await runAsync(sql, [counterId, ticketId]);
+    if (result.changes !== 1) {
+        throw new Error("Ticket is no longer waiting");
+    }
+    return result;
+}
 
 /**
  * Persist a ticket with a unique code in the selected service queue.

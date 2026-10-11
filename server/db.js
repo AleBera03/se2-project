@@ -13,6 +13,7 @@ const DB_PATH = process.env.DB_PATH ?? path.join(__dirname, DB_FILE);
 const SCHEMA_PATH = path.join(__dirname, "oqms-schema.sql");
 
 const db = new sqlite3.Database(DB_PATH);
+let queue = Promise.resolve();
 
 await new Promise((resolve, reject) => {
     db.run("PRAGMA foreign_keys = ON;", (err) => {
@@ -71,5 +72,37 @@ function initDatabase(resolve, reject) {
 }
 
 await initializeData(db);
+
+// HELPERS
+
+export function runAsync(sql, params = []) {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, function (err) {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            resolve(this);
+        });
+    });
+}
+
+export function transaction(callback) {
+    const execute = async () => {
+        await runAsync('BEGIN TRANSACTION');
+        try {
+            const res = await callback();
+            await runAsync('COMMIT');
+            return res;
+        } catch (err) {
+            await runAsync('ROLLBACK');
+            throw err;
+        }
+    };
+    const result = queue.then(execute);
+    queue = result.catch(() => {});
+    return result;
+}
 
 export default db;

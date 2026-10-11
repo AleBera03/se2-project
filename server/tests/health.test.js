@@ -7,7 +7,7 @@ describe('GET /api/health', () => {
     const res = await request(app).get('/api/health');
 
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe('OK');
+    expect(res.body.status).toBe('ok');
   });
 
   it('returns 404 for unknown routes', async () => {
