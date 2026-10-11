@@ -1,4 +1,4 @@
-import { assignTicket, getCounterQueues, getFirstWaitingTicket } from "./dao.js";
+import { assignTicket, getCounterQueues, getFirstWaitingTicket } from "./dao/ticket-dao.js";
 import { transaction } from "./db.js";
 
 /**

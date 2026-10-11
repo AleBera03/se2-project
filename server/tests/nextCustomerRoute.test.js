@@ -30,7 +30,11 @@ function setup({ found = true, dbError = null, ticket = { id: 4, status: 'served
       status(value) { code = value; return this; },
       json(value) { body = value; return this; },
     };
-    await handler({ params: { counterId } }, res);
+    await handler({
+      params: { counterId },
+      isAuthenticated: () => true,
+      user: { counterId: Number(counterId) },
+    }, res);
     return { code, body, calls, assignNextTicket };
   }
   return request;

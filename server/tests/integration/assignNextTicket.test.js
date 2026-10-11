@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { run, get, all } from '../helpers/testDb.js';
 import { assignNextTicket } from '../../queueService.js';
-import { createTicket } from '../../dao.js';
+import { createTicket } from '../../dao/ticket-dao.js';
 
 // fixtures
 // counter 1 -> services 1 (5 min) 2 (7 min)

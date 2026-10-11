@@ -15,6 +15,14 @@ CREATE TABLE Counter (
     name TEXT NOT NULL UNIQUE CHECK (length(trim(name)) > 0)
 );
 
+CREATE TABLE CounterAccount (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE CHECK (length(trim(username)) > 0),
+    hash TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    counter_id INTEGER NOT NULL UNIQUE REFERENCES Counter(id)
+);
+
 CREATE TABLE CounterService (
     counter_id INTEGER NOT NULL REFERENCES Counter(id),
     service_id INTEGER NOT NULL REFERENCES Service(id),

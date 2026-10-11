@@ -7,11 +7,11 @@ import {
   assignTicket,
   getCounterQueues,
   getFirstWaitingTicket,
-} from '../../dao.js';
+} from '../../dao/ticket-dao.js';
 import { transaction } from '../../db.js';
 import { assignNextTicket } from '../../queueService.js';
 
-vi.mock('../../dao.js', () => ({
+vi.mock('../../dao/ticket-dao.js', () => ({
   getCounterQueues: vi.fn(),
   getFirstWaitingTicket: vi.fn(),
   assignTicket: vi.fn(),

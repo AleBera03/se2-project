@@ -1,4 +1,4 @@
-import db, { runAsync, transaction } from "./db.js";
+import db, { runAsync, transaction } from "../db.js";
 
 const MAX_DAILY_TICKET_NUMBER = 999;
 
@@ -177,7 +177,7 @@ export async function createTicket(serviceId) {
             error.code = "TICKET_CODE_IN_USE";
             throw error;
         }
-        
+
         const result = await runAsync(`
             INSERT INTO Ticket (
                 service_id, daily_number, ticket_date, code

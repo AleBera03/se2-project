@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createTicket } from '../../dao.js';
+import { createTicket } from '../../dao/ticket-dao.js';
 
 describe('createTicket', () => {
   it('generates a waiting ticket with a service-specific daily code', async () => {

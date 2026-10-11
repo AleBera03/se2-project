@@ -1,49 +1,17 @@
-import { useState } from "react";
+import { useNextCustomerLogic } from "../../hooks/useNextCustomerLogic";
 import { Button, Card, Col, Row, Alert, Spinner } from "react-bootstrap";
 
 function NextCustomer(props) {
+
     const { counterId = 1 } = props;
 
-    const [ticket, setTicket] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [noCustomer, setNoCustomer] = useState(false);
-
-    const handleNextCustomer = async () => {
-        if (loading) {
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-        setTicket(null);
-        setNoCustomer(false);
-
-        try {
-            const response = await fetch(`/api/counters/${counterId}/next`, {
-                method: "POST"
-            });
-
-            if (!response.ok) {
-                const data = await response.json().catch(() => null);
-                throw new Error(
-                    data?.error || "Unable to call the next customer."
-                );
-            }
-
-            const data = await response.json();
-
-            if (data === null) {
-                setNoCustomer(true);
-            } else {
-                setTicket(data);
-            }
-        } catch (err) {
-            setError(err.message || "An unexpected error occurred.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const {
+        ticket,
+        loading,
+        error,
+        noCustomer,
+        handleNextCustomer
+    } = useNextCustomerLogic(counterId);
 
     return (
         <Row className="justify-content-center mt-4">
@@ -93,18 +61,18 @@ function NextCustomer(props) {
                             )}
 
                             {noCustomer && (
-                                <Alert variant="warning" className="mb-0">
+                                <Alert variant="info" className="mb-0">
                                     No customers waiting.
                                 </Alert>
                             )}
 
                             {ticket && (
-                                <Card className="border-success bg-light">
+                                <Card className="border-primary bg-light">
                                     <Card.Body>
                                         <Card.Subtitle className="mb-2 text-muted">
                                             Currently Serving
                                         </Card.Subtitle>
-                                        <Card.Title className="display-4 fw-bold text-success mb-0">
+                                        <Card.Title className="display-4 fw-bold text-primary mb-0">
                                             {ticket.code}
                                         </Card.Title>
                                         <Card.Text className="mb-0">

@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
@@ -15,9 +15,10 @@ async function loadWithQueues(queues) {
   );
   try {
     await writeFile(join(dir, 'package.json'), '{"type":"module"}');
+    await mkdir(join(dir, 'dao'));
     // Copy the project's actual implementation, not a duplicate of its logic.
     await writeFile(join(dir, 'queueService.js'), await readFile(queueServicePath));
-    await writeFile(join(dir, 'dao.js'), `
+    await writeFile(join(dir, 'dao', 'ticket-dao.js'), `
       export const calls = { getCounterQueues: 0, getFirstWaitingTicket: 0, assignTicket: 0 };
       export async function getCounterQueues() { calls.getCounterQueues++; return ${JSON.stringify(queues)}; }
       export async function getFirstWaitingTicket() { calls.getFirstWaitingTicket++; throw new Error('Should not fetch tickets'); }
@@ -28,7 +29,9 @@ async function loadWithQueues(queues) {
       export async function transaction(callback) { transactionCalls.count++; return await callback(); }
     `);
     const service = await import(pathToFileURL(join(dir, 'queueService.js')).href);
-    const dao = await import(pathToFileURL(join(dir, 'dao.js')).href);
+    const dao = await import(
+      pathToFileURL(join(dir, 'dao', 'ticket-dao.js')).href
+    );
     return { ...service, calls: dao.calls, cleanup: () => rm(dir, { recursive: true, force: true }) };
   } catch (err) {
     await rm(dir, { recursive: true, force: true });

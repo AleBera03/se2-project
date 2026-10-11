@@ -1,13 +1,17 @@
 import { Container } from "react-bootstrap";
 import { Outlet } from "react-router-dom";
 
-function Layout() {
+function Layout({ navbar }) {
     return (
-        <main className="app-layout">
-            <Container className="content py-4">
-                <Outlet />
-            </Container>
-        </main>
+        <>
+            {navbar}
+
+            <main className="app-layout">
+                <Container className="content py-4">
+                    <Outlet />
+                </Container>
+            </main>
+        </>
     );
 }
 

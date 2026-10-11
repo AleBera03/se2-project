@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { mkdtemp, copyFile, writeFile, rm, realpath } from 'node:fs/promises';
+import { mkdtemp, mkdir, copyFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -13,9 +13,10 @@ async function fixture() {
     await mkdtemp(join(tmpdir(), 'counter-queues-'))
   );
   await writeFile(join(dir, 'package.json'), JSON.stringify({ type: 'module' }));
+  await mkdir(join(dir, 'dao'));
   await copyFile(
-    new URL('../../dao.js', import.meta.url),
-    join(dir, 'dao.js')
+    new URL('../../dao/ticket-dao.js', import.meta.url),
+    join(dir, 'dao', 'ticket-dao.js')
   );
   await writeFile(join(dir, 'db.js'), `
     import { DatabaseSync } from 'node:sqlite';
@@ -40,7 +41,9 @@ async function fixture() {
     }
     export default db;
   `);
-  const dao = await import(pathToFileURL(join(dir, 'dao.js')).href);
+  const dao = await import(
+    pathToFileURL(join(dir, 'dao', 'ticket-dao.js')).href
+  );
   const { sqlite, db } = await import(pathToFileURL(join(dir, 'db.js')).href);
   sqlite.exec(`
     CREATE TABLE Service (id INTEGER PRIMARY KEY, name TEXT NOT NULL, service_time REAL NOT NULL);

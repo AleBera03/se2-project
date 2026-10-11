@@ -4,7 +4,8 @@ import path from "path";
 
 import { fileURLToPath } from "url";
 
-import { initializeData } from "./init-db.js";
+import { initializeData } from "./init/init-db.js";
+import { initializeAccounts } from "./init/init-accounts.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -91,6 +92,7 @@ await new Promise((resolve, reject) => {
 });
 
 await initializeData(db);
+await initializeAccounts(db);
 
 // HELPERS
 
