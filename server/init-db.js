@@ -5,37 +5,78 @@
  * Existing configuration and tickets are preserved.
  */
 const services = [
-    { id: 1, code: "PAY", name: "Postal Payment Slips (up to 5)", serviceTime: 5 },
+    {
+        id: 1,
+        code: "A",
+        name: "Postal Payment Slips (up to 5)",
+        serviceTime: 5
+    },
     {
         id: 2,
-        code: "BANK", name: "Deposits, Withdrawals, F24, Top-ups and Other Payments",
+        code: "B",
+        name: "Deposits, Withdrawals, F24, Top-ups and Other Payments",
         serviceTime: 8
     },
-    { id: 3, code: "MAIL", name: "Mail and Parcels", serviceTime: 7 },
+    {
+        id: 3,
+        code: "C",
+        name: "Mail and Parcels",
+        serviceTime: 7
+    },
     {
         id: 4,
-        code: "CARD", name: "Postepay Cards, Energy and Phone Services",
+        code: "D",
+        name: "Postepay Cards, Energy and Phone Services",
         serviceTime: 15
     },
     {
         id: 5,
-        code: "ADMIN", name: "Public Administration Services - Polis",
+        code: "E",
+        name: "Public Administration Services - Polis",
         serviceTime: 20
     },
     {
         id: 6,
-        code: "SAVE", name: "Postal Savings Bonds and Savings Books",
+        code: "F",
+        name: "Postal Savings Bonds and Savings Books",
         serviceTime: 12
     },
-    { id: 7, code: "INS", name: "Motor Insurance", serviceTime: 20 },
+    {
+        id: 7,
+        code: "G",
+        name: "Motor Insurance",
+        serviceTime: 20
+    },
     {
         id: 8,
-        code: "FIN", name: "Current Accounts, Loans, Investments and Insurance",
+        code: "H",
+        name: "Current Accounts and Loans",
         serviceTime: 25
     },
-    { id: 9, code: "SPID", name: "SPID", serviceTime: 15 },
-    { id: 10, code: "PERMIT", name: "Residence Permits", serviceTime: 20 },
-    { id: 11, code: "OTHER", name: "Other", serviceTime: 10 }
+    {
+        id: 9,
+        code: "I",
+        name: "SPID",
+        serviceTime: 15
+    },
+    {
+        id: 10,
+        code: "J",
+        name: "Residence Permits",
+        serviceTime: 20
+    },
+    {
+        id: 11,
+        code: "K",
+        name: "Other",
+        serviceTime: 10
+    },
+    {
+        id: 12,
+        code: "L",
+        name: "Investments and Insurance",
+        serviceTime: 25
+    }
 ];
 
 const counters = [
@@ -47,30 +88,31 @@ const counters = [
 ];
 
 const counterServices = [
-    // Counter 1: Postal Payment Slips (up to 5); Deposits, Withdrawals, F24, Top-ups and Other Payments; Mail and Parcels.
+    // Counter 1: services A, B, C.
     { counterId: 1, serviceId: 1 },
     { counterId: 1, serviceId: 2 },
     { counterId: 1, serviceId: 3 },
 
-    // Counter 2: Postal Payment Slips (up to 5); Deposits, Withdrawals, F24, Top-ups and Other Payments; Postal Savings Bonds and Savings Books.
+    // Counter 2: services A, B, F.
     { counterId: 2, serviceId: 1 },
     { counterId: 2, serviceId: 2 },
     { counterId: 2, serviceId: 6 },
 
-    // Counter 3: Mail and Parcels; Postepay Cards, Energy and Phone Services.
+    // Counter 3: services C, D.
     { counterId: 3, serviceId: 3 },
     { counterId: 3, serviceId: 4 },
 
-    // Counter 4: Public Administration Services - Polis; SPID; Residence Permits.
+    // Counter 4: services E, I, J.
     { counterId: 4, serviceId: 5 },
     { counterId: 4, serviceId: 9 },
     { counterId: 4, serviceId: 10 },
 
-    // Counter 5: Postal Savings Bonds and Savings Books; Motor Insurance; Current Accounts, Loans, Investments and Insurance; Other.
+    // Counter 5: services F, G, H, K, L.
     { counterId: 5, serviceId: 6 },
     { counterId: 5, serviceId: 7 },
     { counterId: 5, serviceId: 8 },
-    { counterId: 5, serviceId: 11 }
+    { counterId: 5, serviceId: 11 },
+    { counterId: 5, serviceId: 12 }
 ];
 
 function runQuery(db, sql, params = []) {

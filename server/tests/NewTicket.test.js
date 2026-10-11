@@ -7,7 +7,7 @@ describe('createTicket', () => {
 
     expect(ticket.service_id).toBe(1);
     expect(ticket.status).toBe('waiting');
-    expect(ticket.code).toMatch(/^PAY-\d{3}$/);
+    expect(ticket.code).toBe('A000');
     expect(ticket.created_at).toBeTruthy();
   });
 });
