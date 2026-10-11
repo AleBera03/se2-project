@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { createTicket, getServices } from "../API/API.mjs";
 
@@ -85,12 +85,12 @@ function useCustomerLogic() {
     };
 
     // Closes the confirmation and resets the selected service.
-    const handleCloseTicketConfirmation = () => {
+    const handleCloseTicketConfirmation = useCallback(() => {
         setShowTicketConfirmation(false);
         setSelectedService(null);
         setTicket(null);
         setTicketError(null);
-    };
+    }, []);
 
     return {
         services,
