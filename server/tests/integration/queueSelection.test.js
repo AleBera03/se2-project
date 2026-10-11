@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { run, all } from './helpers/testDb.js';
-import { chooseQueueForCounter } from '../queueService.js';
+import { run, all } from '../helpers/testDb.js';
+import { chooseQueueForCounter } from '../../queueService.js';
 
 // fixtures: counter 1 -> services 1 (5 min), 2 (7 min); counter 2 -> services 2, 3 (15 min)
 const addWaiting = async (serviceId, count) => {

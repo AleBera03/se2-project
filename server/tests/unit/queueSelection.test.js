@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getCounterQueues } from '../dao.js';
-import { selectQueue, chooseQueueForCounter } from '../queueService.js';
+import { getCounterQueues } from '../../dao.js';
+import { selectQueue, chooseQueueForCounter } from '../../queueService.js';
 
-vi.mock('../dao.js', () => ({ getCounterQueues: vi.fn() }));
+vi.mock('../../dao.js', () => ({
+  getCounterQueues: vi.fn(),
+}));
 
 const q = (serviceId, queueLength, averageServiceTime) => ({ serviceId, queueLength, averageServiceTime });
 

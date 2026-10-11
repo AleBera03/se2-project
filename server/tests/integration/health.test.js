@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import app from '../app.js';
+import app from '../../app.js';
 
 describe('GET /api/health', () => {
   it('returns 200 when the database is reachable', async () => {

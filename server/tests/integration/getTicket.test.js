@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 
-import app from '../app.js';
-import { get, run } from './helpers/testDb.js';
+import app from '../../app.js';
+import { get, run } from '../helpers/testDb.js';
 
 describe('Get ticket — API and database integration', () => {
   it('returns the services stored in the database', async () => {

@@ -14,7 +14,7 @@ async function fixture() {
   );
   await writeFile(join(dir, 'package.json'), JSON.stringify({ type: 'module' }));
   await copyFile(
-    new URL('../dao.js', import.meta.url),
+    new URL('../../dao.js', import.meta.url),
     join(dir, 'dao.js')
   );
   await writeFile(join(dir, 'db.js'), `

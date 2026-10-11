@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { run, get, all, resetTestDb } from './helpers/testDb.js';
+import { run, get, all, resetTestDb } from '../helpers/testDb.js';
 
 describe('test database', () => {
   it('uses the dedicated test file', async () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { run, get, all } from './helpers/testDb.js';
-import { transaction } from '../db.js';
+import { run, get, all } from '../helpers/testDb.js';
+import { transaction } from '../../db.js';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const addWaiting = async (serviceId) => {
