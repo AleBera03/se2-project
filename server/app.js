@@ -3,8 +3,7 @@ import cors from "cors";
 
 import db from "./db.js";
 import { createTicket, getServices } from "./dao.js";
-import { registerNextCustomerRoute } from './nextCustomerRoute.js';
-import { assignNextTicket } from './queueService.js';
+import { assignNextTicket } from "./queueService.js";
 
 const app = express();
 
@@ -87,10 +86,65 @@ app.post("/api/tickets", async (req, res) => {
     }
 });
 
+/* COUNTERS */
 
-registerNextCustomerRoute(app, {
-  db,
-  assignNextTicket
-});
+/**
+ * Serves the next waiting customer for a counter.
+ */
+export function registerNextCustomerRoute(app, { db, assignNextTicket }) {
+    app.post("/api/counters/:counterId/next", async (req, res) => {
+        const rawId = req.params.counterId;
+
+        if (typeof rawId !== "string" || !/^[1-9]\d*$/.test(rawId)) {
+            res.status(400).json({
+                error: "Invalid counter ID"
+            });
+            return;
+        }
+
+        const counterId = Number(rawId);
+
+        if (!Number.isSafeInteger(counterId)) {
+            res.status(400).json({
+                error: "Invalid counter ID"
+            });
+            return;
+        }
+
+        try {
+            const counter = await new Promise((resolve, reject) => {
+                db.get(
+                    "SELECT id FROM Counter WHERE id = ?",
+                    [counterId],
+                    (err, row) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        resolve(row);
+                    }
+                );
+            });
+
+            if (!counter) {
+                res.status(404).json({
+                    error: "Counter not found"
+                });
+                return;
+            }
+
+            const ticket = await assignNextTicket(counterId);
+            res.status(200).json(ticket ?? null);
+        } catch (err) {
+            console.error("Next-customer API error:", err);
+            res.status(500).json({
+                error: "Unable to retrieve next customer"
+            });
+        }
+    });
+}
+
+registerNextCustomerRoute(app, { db, assignNextTicket });
 
 export default app;

@@ -2,9 +2,7 @@ import { useState } from "react";
 import { Button, Card, Col, Row, Alert, Spinner } from "react-bootstrap";
 
 function NextCustomer(props) {
-    const {
-        counterId = 1
-    } = props;
+    const { counterId = 1 } = props;
 
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -12,23 +10,32 @@ function NextCustomer(props) {
     const [noCustomer, setNoCustomer] = useState(false);
 
     const handleNextCustomer = async () => {
+        if (loading) {
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setTicket(null);
         setNoCustomer(false);
 
         try {
-            // TODO for Lorenzo: connettere l'interfaccia all'API
             const response = await fetch(`/api/counters/${counterId}/next`, {
                 method: "POST"
             });
 
-            if (response.status === 404) {
+            if (!response.ok) {
+                const data = await response.json().catch(() => null);
+                throw new Error(
+                    data?.error || "Unable to call the next customer."
+                );
+            }
+
+            const data = await response.json();
+
+            if (data === null) {
                 setNoCustomer(true);
-            } else if (!response.ok) {
-                throw new Error("Unable to call the next customer.");
             } else {
-                const data = await response.json();
                 setTicket(data);
             }
         } catch (err) {
@@ -87,7 +94,7 @@ function NextCustomer(props) {
 
                             {noCustomer && (
                                 <Alert variant="warning" className="mb-0">
-                                    No customers are currently waiting for this counter.
+                                    No customers waiting.
                                 </Alert>
                             )}
 
@@ -100,6 +107,10 @@ function NextCustomer(props) {
                                         <Card.Title className="display-4 fw-bold text-success mb-0">
                                             {ticket.code}
                                         </Card.Title>
+                                        <Card.Text className="mb-0">
+                                            {ticket.service_name ||
+                                                `Service ${ticket.service_id}`}
+                                        </Card.Text>
                                     </Card.Body>
                                 </Card>
                             )}

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { registerNextCustomerRoute } from '../nextCustomerRoute.js';
+import { registerNextCustomerRoute } from '../app.js';
 
 function setup({ found = true, dbError = null, ticket = { id: 4, status: 'served' }, assignmentError = null } = {}) {
   let handler;
