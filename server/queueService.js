@@ -72,6 +72,6 @@ export async function assignNextTicket(counterId) {
         let firstTicket = await getFirstWaitingTicket(queue.serviceId);
         if (!firstTicket) return null;
         await assignTicket(firstTicket.id, counterId);
-        return { ...firstTicket, status: 'served', counterId: counterId };
+        return { ...firstTicket, status: 'served', counter_id: counterId };
     })
 }
