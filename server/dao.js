@@ -69,7 +69,9 @@ export async function assignTicket(ticketId, counterId) {
     const result = await runAsync(`
         UPDATE Ticket
         SET status = 'served', counter_id = ?
-        WHERE id = ? AND status = 'waiting'
+        WHERE id = ?
+            AND status = 'waiting'
+            AND ticket_date = strftime('%Y-%m-%d', 'now')
     `, [counterId, ticketId]);
 
     if (result.changes !== 1) {
@@ -98,7 +100,9 @@ export const getCounterQueues = (counterId) => {
             FROM CounterService AS cs
             JOIN Service AS s ON s.id = cs.service_id
             LEFT JOIN Ticket AS t
-                ON t.service_id = s.id AND t.status = 'waiting'
+                ON t.service_id = s.id
+                AND t.status = 'waiting'
+                AND t.ticket_date = strftime('%Y-%m-%d', 'now')
             WHERE cs.counter_id = ?
             GROUP BY s.id, s.name, s.service_time
             ORDER BY s.id
@@ -160,9 +164,11 @@ export async function createTicket(serviceId) {
         const waitingTicket = await getRow(`
             SELECT id
             FROM Ticket
-            WHERE code = ? AND status = 'waiting'
+            WHERE code = ?
+                AND ticket_date = ?
+                AND status = 'waiting'
             LIMIT 1
-        `, [code]);
+        `, [code, service.ticketDate]);
 
         if (waitingTicket) {
             const error = new Error(

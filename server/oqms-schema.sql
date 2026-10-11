@@ -40,7 +40,7 @@ CREATE TABLE Ticket (
         REFERENCES CounterService(counter_id, service_id)
 );
 
-CREATE UNIQUE INDEX idx_ticket_waiting_code ON Ticket(code) WHERE status = 'waiting';
+CREATE UNIQUE INDEX idx_ticket_waiting_code ON Ticket(ticket_date, code) WHERE status = 'waiting';
 CREATE INDEX idx_ticket_queue ON Ticket(service_id, status, created_at, id);
 CREATE INDEX idx_counter_service_service ON CounterService(service_id);
 

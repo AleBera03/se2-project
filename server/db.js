@@ -71,6 +71,25 @@ function initDatabase(resolve, reject) {
     });
 }
 
+// Updates waiting-code uniqueness to allow daily code reuse.
+await new Promise((resolve, reject) => {
+    db.exec(`
+        BEGIN TRANSACTION;
+        DROP INDEX IF EXISTS idx_ticket_waiting_code;
+        CREATE UNIQUE INDEX idx_ticket_waiting_code
+        ON Ticket(ticket_date, code)
+        WHERE status = 'waiting';
+        COMMIT;
+    `, (err) => {
+        if (err) {
+            db.run("ROLLBACK", () => reject(err));
+            return;
+        }
+
+        resolve();
+    });
+});
+
 await initializeData(db);
 
 // HELPERS
