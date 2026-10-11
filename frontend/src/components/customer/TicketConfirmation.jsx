@@ -14,38 +14,32 @@ function TicketConfirmation(props) {
     // State of the ticket confirmation countdown.
     const [secondsLeft, setSecondsLeft] = useState(20);
 
-    // Start the countdown when the modal is shown.
+    // Starts the countdown and closes the confirmation after 20 seconds.
     useEffect(() => {
         if (!show) {
             return;
         }
 
-        const resetTimeoutId = setTimeout(() => {
-            setSecondsLeft(20);
-        }, 0);
+        const deadline = Date.now() + 20_000;
 
-        const intervalId = setInterval(() => {
-            setSecondsLeft((seconds) => Math.max(0, seconds - 1));
-        }, 1000);
+        const updateCountdown = () => {
+            setSecondsLeft(
+                Math.max(0, Math.ceil((deadline - Date.now()) / 1000))
+            );
+        };
+
+        const resetTimeoutId = setTimeout(updateCountdown, 0);
+        const intervalId = setInterval(updateCountdown, 1000);
+        const closeTimeoutId = setTimeout(onClose, 20_000);
 
         return () => {
             clearTimeout(resetTimeoutId);
             clearInterval(intervalId);
+            clearTimeout(closeTimeoutId);
         };
-    }, [show]);
+    }, [show, onClose]);
 
-    // Close the modal when the countdown reaches zero.
-    useEffect(() => {
-        if (show && secondsLeft === 0) {
-            onClose();
-        }
-    }, [show, secondsLeft, onClose]);
-
-    if (!ticket || !service) {
-        return null;
-    }
-
-    const issuedAt = ticket.createdAt
+    const issuedAt = ticket?.createdAt
         ? new Date(ticket.createdAt)
         : null;
 
@@ -58,7 +52,7 @@ function TicketConfirmation(props) {
 
     return (
         <Modal
-            show={show}
+            show={show && Boolean(ticket && service)}
             onHide={onClose}
             centered
             aria-labelledby="ticket-confirmation-title"
@@ -76,7 +70,7 @@ function TicketConfirmation(props) {
                     </p>
 
                     <h2 className="h5 ticket-service mb-3">
-                        {service.name}
+                        {service?.name}
                     </h2>
 
                     <p className="ticket-description mb-1">
@@ -84,7 +78,7 @@ function TicketConfirmation(props) {
                     </p>
 
                     <p className="ticket-code mb-4">
-                        {ticket.code}
+                        {ticket?.code}
                     </p>
 
                     <div className="ticket-details pt-3">
@@ -103,8 +97,8 @@ function TicketConfirmation(props) {
                         )}
 
                         <p className="ticket-description mb-0">
-                            Note your ticket code 
-                            and wait for it to appear 
+                            Note your ticket code
+                            and wait for it to appear
                             on the display.
                         </p>
 
