@@ -1,17 +1,22 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { mkdtemp, copyFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, copyFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // Tests the actual exported dao.js function, not the removed getCounterQueues.js.
 // Uses a private temporary ES-module environment and SQLite memory database.
 async function fixture() {
-  const dir = await mkdtemp(join(tmpdir(), 'counter-queues-'));
+  const dir = await realpath(
+    await mkdtemp(join(tmpdir(), 'counter-queues-'))
+  );
   await writeFile(join(dir, 'package.json'), JSON.stringify({ type: 'module' }));
-  await copyFile(resolve('server/dao.js'), join(dir, 'dao.js'));
+  await copyFile(
+      new URL('../dao.js', import.meta.url),
+      join(dir, 'dao.js')
+  );
   await writeFile(join(dir, 'db.js'), `
     import { DatabaseSync } from 'node:sqlite';
     export const sqlite = new DatabaseSync(':memory:');

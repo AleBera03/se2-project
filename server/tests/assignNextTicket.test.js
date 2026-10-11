@@ -21,7 +21,12 @@ describe('assignNextTicket', () => {
 
     const ticket = await assignNextTicket(1);
 
-    expect(ticket.id).toBe(2);
+    expect(ticket).toMatchObject({
+      id: 2,
+      service_id: 2,
+      status: 'served',
+      counter_id: 1,
+    });
     expect(await tickets()).toEqual([
       { id: 1, service_id: 2, status: 'waiting', counter_id: null },
       { id: 2, service_id: 2, status: 'served', counter_id: 1 },
