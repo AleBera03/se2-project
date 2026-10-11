@@ -1,15 +1,18 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 
-const queueServicePath = fileURLToPath(new URL('../queueService.js', import.meta.url));
+const queueServicePath =
+  fileURLToPath(new URL('../../queueService.js', import.meta.url));
 const row = (serviceId, queueLength, averageServiceTime) => ({ serviceId, queueLength, averageServiceTime });
 
 async function loadWithQueues(queues) {
-  const dir = await mkdtemp(join(tmpdir(), 'empty-compatible-queues-'));
+  const dir = await realpath(
+    await mkdtemp(join(tmpdir(), 'empty-compatible-queues-'))
+  );
   try {
     await writeFile(join(dir, 'package.json'), '{"type":"module"}');
     // Copy the project's actual implementation, not a duplicate of its logic.

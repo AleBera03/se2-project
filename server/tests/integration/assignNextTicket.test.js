@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { run, all } from './helpers/testDb.js';
-import { assignNextTicket } from '../queueService.js';
-import { createTicket } from '../dao.js';
+import { run, all } from '../helpers/testDb.js';
+import { assignNextTicket } from '../../queueService.js';
+import { createTicket } from '../../dao.js';
 
 // fixtures
 // counter 1 -> services 1 (5 min) 2 (7 min)
@@ -18,7 +18,8 @@ const addWaiting = async (serviceId, count = 1, createdAt) => {
     }
   }
 };
-const tickets = () => all('SELECT id, service_id, status, counter_id FROM Ticket ORDER BY id');
+const tickets = () =>
+  all('SELECT id, service_id, status, counter_id FROM Ticket ORDER BY id');
 
 describe('assignNextTicket', () => {
   it('assigns the oldest waiting ticket of the selected queue', async () => {
