@@ -18,7 +18,7 @@ function NextCustomer(props) {
         setNoCustomer(false);
 
         try {
-            // TODO for Lorenzo: connettere l'interfaccia all'API 
+            // TODO for Lorenzo: connettere l'interfaccia all'API
             const response = await fetch(`/api/counters/${counterId}/next`, {
                 method: "POST"
             });

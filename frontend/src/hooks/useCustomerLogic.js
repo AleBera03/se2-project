@@ -58,7 +58,7 @@ function useCustomerLogic() {
             return;
         }
 
-        setSelectedService(service); 
+        setSelectedService(service);
         setTicket(null);
         setTicketError(null);
         setIsGeneratingTicket(true);

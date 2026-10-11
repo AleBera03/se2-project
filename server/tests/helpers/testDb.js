@@ -33,10 +33,10 @@ export async function resetTestDb() {
 // counter 1: services 1, 2 - counter 2: services 2, 3 - no tickets
 async function seedFixtures() {
   await exec(`
-    INSERT INTO Service (id, name, service_time) VALUES
-      (1, 'Payments', 5),
-      (2, 'Mail and Parcels', 7),
-      (3, 'SPID', 15);
+    INSERT INTO Service (id, code, name, service_time) VALUES
+      (1, 'A', 'Payments', 5),
+      (2, 'C', 'Mail and Parcels', 7),
+      (3, 'I', 'SPID', 15);
     INSERT INTO Counter (id, name) VALUES
       (1, 'Counter 1'),
       (2, 'Counter 2');

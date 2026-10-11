@@ -1,9 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { run, all } from './helpers/testDb.js';
+import { run, get, all } from './helpers/testDb.js';
 import { transaction } from '../db.js';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const addWaiting = (serviceId) => run('INSERT INTO Ticket (service_id) VALUES (?)', [serviceId]);
+const addWaiting = async (serviceId) => {
+  const row = await get(`
+    SELECT
+      COALESCE(
+        (SELECT code FROM Service WHERE id = ?),
+        'Z'
+      ) AS serviceCode,
+      COALESCE(
+        (SELECT MAX(daily_number) FROM Ticket WHERE service_id = ?),
+        -1
+      ) + 1 AS dailyNumber
+  `, [serviceId, serviceId]);
+
+  const code =
+    `${row.serviceCode}${String(row.dailyNumber).padStart(3, '0')}`;
+
+  return run(`
+    INSERT INTO Ticket (service_id, daily_number, code)
+    VALUES (?, ?, ?)
+  `, [serviceId, row.dailyNumber, code]);
+};
 const tickets = () => all('SELECT id, service_id FROM Ticket ORDER BY id');
 
 describe('transaction', () => {

@@ -1,4 +1,6 @@
-import db, { runAsync } from "./db.js"
+import db, { runAsync, transaction } from "./db.js";
+
+const MAX_DAILY_TICKET_NUMBER = 999;
 
 /**
  * Retrieve the available services.
@@ -21,6 +23,58 @@ export const getServices = () => {
         });
     });
 };
+
+/**
+ * Retrieve the oldest waiting ticket for the selected service.
+ * Resolve equal creation timestamps by lowest ticket ID.
+ */
+export const getFirstWaitingTicket = (serviceId) => {
+    return new Promise((resolve, reject) => {
+        if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
+            reject(new TypeError("serviceId must be a positive integer"));
+            return;
+        }
+
+        const sql = `
+            SELECT *
+            FROM Ticket
+            WHERE service_id = ? AND status = 'waiting'
+            ORDER BY created_at, id
+            LIMIT 1
+        `;
+
+        db.get(sql, [serviceId], (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+};
+
+/**
+ * Assign a waiting ticket to a counter and mark it as served.
+ * Reject the operation if the ticket is no longer waiting.
+ */
+export async function assignTicket(ticketId, counterId) {
+    if (!Number.isSafeInteger(ticketId) || ticketId <= 0) {
+        throw new TypeError("ticketId must be a positive integer");
+    }
+
+    if (!Number.isSafeInteger(counterId) || counterId <= 0) {
+        throw new TypeError("counterId must be a positive integer");
+    }
+
+    const result = await runAsync(`
+        UPDATE Ticket
+        SET status = 'served', counter_id = ?
+        WHERE id = ? AND status = 'waiting'
+    `, [counterId, ticketId]);
+
+    if (result.changes !== 1) {
+        throw new Error("Ticket is no longer waiting");
+    }
+
+    return result;
+}
 
 /**
  * Retrieve supported services and waiting-queue lengths for a counter.
@@ -58,95 +112,74 @@ export const getCounterQueues = (counterId) => {
     });
 };
 
-export const getFirstWaitingTicket = (serviceId) => {
-    return new Promise((resolve, reject) => {
-        if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
-            reject(new TypeError("serviceId must be a positive integer"));
-            return;
-        }
-
-        const sql = `
-            SELECT *
-            FROM Ticket
-            WHERE service_id = ? 
-            AND status = 'waiting'
-            ORDER BY created_at, id
-            LIMIT 1
-        `;
-
-        db.get(sql, [serviceId], (err, row) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-
-            resolve(row);
-        });
-    });
-}
-
-export async function assignTicket (ticketId, counterId) {
-    // check ticketId
-    if (!Number.isSafeInteger(ticketId) || ticketId <= 0) {
-        throw new TypeError("ticketId must be a positive integer");
-    }
-
-    // check counterId
-    if (!Number.isSafeInteger(counterId) || counterId <= 0) {
-        throw new TypeError("counterId must be a positive integer");
-    }
-
-    const sql = `
-        UPDATE Ticket
-        SET status = 'served', counter_id = ?
-        WHERE id = ?
-        AND status = 'waiting'
-    `;
-
-    const result = await runAsync(sql, [counterId, ticketId]);
-    if (result.changes !== 1) {
-        throw new Error("Ticket is no longer waiting");
-    }
-    return result;
-}
-
 /**
- * Persist a ticket with a unique code in the selected service queue.
+ * Create a waiting ticket with a service-specific daily number.
  */
-export const createTicket = (serviceId) => {
-    return new Promise((resolve, reject) => {
-        if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
-            reject(new TypeError("serviceId must be a positive integer"));
-            return;
+export async function createTicket(serviceId) {
+    if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
+        throw new TypeError("serviceId must be a positive integer");
+    }
+
+    return transaction(async () => {
+        const getRow = (sql, params = []) =>
+            new Promise((resolve, reject) => {
+                db.get(sql, params, (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
+                });
+            });
+
+        const service = await getRow(`
+            SELECT code, strftime('%Y-%m-%d', 'now') AS ticketDate
+            FROM Service
+            WHERE id = ?
+        `, [serviceId]);
+
+        if (!service) {
+            throw new Error("Service not found.");
         }
 
-        const insertSql = `
-            INSERT INTO Ticket (service_id)
-            VALUES (?)
-        `;
+        const lastTicket = await getRow(`
+            SELECT daily_number
+            FROM Ticket
+            WHERE service_id = ? AND ticket_date = ?
+            ORDER BY id DESC
+            LIMIT 1
+        `, [serviceId, service.ticketDate]);
 
-        db.run(insertSql, [serviceId], function (err) {
-            if (err) {
-                reject(err);
-                return;
-            }
+        const dailyNumber = lastTicket
+            ? (lastTicket.daily_number + 1) % (MAX_DAILY_TICKET_NUMBER + 1)
+            : 0;
 
-            const newTicketId = this.lastID;
+        const code =
+            `${service.code}${String(dailyNumber).padStart(3, "0")}`;
 
-            const selectSql = `
-                SELECT id, code, service_id, status, created_at
-                FROM Ticket
-                WHERE id = ?
-            `;
+        const waitingTicket = await getRow(`
+            SELECT id
+            FROM Ticket
+            WHERE code = ? AND status = 'waiting'
+            LIMIT 1
+        `, [code]);
 
-            db.get(selectSql, [newTicketId], (err, row) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
+        if (waitingTicket) {
+            const error = new Error(
+                "Ticket code is still in use. Please wait before requesting another ticket."
+            );
+            error.code = "TICKET_CODE_IN_USE";
+            throw error;
+        }
+        
+        const result = await runAsync(`
+            INSERT INTO Ticket (
+                service_id, daily_number, ticket_date, code
+            )
+            VALUES (?, ?, ?, ?)
+        `, [serviceId, dailyNumber, service.ticketDate, code]);
 
-                resolve(row);
-            });
-        });
+        return getRow(`
+            SELECT id, code, service_id, status, created_at
+            FROM Ticket
+            WHERE id = ?
+        `, [result.lastID]);
     });
-};
+}

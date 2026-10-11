@@ -14,8 +14,8 @@ async function fixture() {
   );
   await writeFile(join(dir, 'package.json'), JSON.stringify({ type: 'module' }));
   await copyFile(
-      new URL('../dao.js', import.meta.url),
-      join(dir, 'dao.js')
+    new URL('../dao.js', import.meta.url),
+    join(dir, 'dao.js')
   );
   await writeFile(join(dir, 'db.js'), `
     import { DatabaseSync } from 'node:sqlite';
@@ -32,6 +32,12 @@ async function fixture() {
         catch (err) { callback(err); }
       }
     };
+    export function runAsync() {
+      throw new Error('runAsync is not supported by this queue-retrieval fixture');
+    }
+    export function transaction() {
+      throw new Error('transaction is not supported by this queue-retrieval fixture');
+    }
     export default db;
   `);
   const dao = await import(pathToFileURL(join(dir, 'dao.js')).href);
