@@ -1,7 +1,10 @@
 import express from "express";
 import cors from "cors";
 
+import db from "./db.js";
 import { createTicket, getServices } from "./dao.js";
+import { registerNextCustomerRoute } from './nextCustomerRoute.js';
+import { assignNextTicket } from './queueService.js';
 
 const app = express();
 
@@ -82,6 +85,12 @@ app.post("/api/tickets", async (req, res) => {
             error: "Unable to create ticket."
         });
     }
+});
+
+
+registerNextCustomerRoute(app, {
+  db,
+  assignNextTicket
 });
 
 export default app;
