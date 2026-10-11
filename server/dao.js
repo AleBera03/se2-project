@@ -154,6 +154,21 @@ export async function createTicket(serviceId) {
         const code =
             `${service.code}${String(dailyNumber).padStart(3, "0")}`;
 
+        const waitingTicket = await getRow(`
+            SELECT id
+            FROM Ticket
+            WHERE code = ? AND status = 'waiting'
+            LIMIT 1
+        `, [code]);
+
+        if (waitingTicket) {
+            const error = new Error(
+                "Ticket code is still in use. Please wait before requesting another ticket."
+            );
+            error.code = "TICKET_CODE_IN_USE";
+            throw error;
+        }
+        
         const result = await runAsync(`
             INSERT INTO Ticket (
                 service_id, daily_number, ticket_date, code

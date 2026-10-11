@@ -72,6 +72,11 @@ app.post("/api/tickets", async (req, res) => {
         const ticket = await createTicket(serviceId);
         res.status(201).json(ticket);
     } catch (err) {
+        if (err.code === "TICKET_CODE_IN_USE") {
+            return res.status(409).json({
+                error: err.message
+            });
+        }
         console.error(err);
         res.status(500).json({
             error: "Unable to create ticket."
