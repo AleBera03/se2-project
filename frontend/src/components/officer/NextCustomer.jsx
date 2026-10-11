@@ -93,18 +93,18 @@ function NextCustomer(props) {
                             )}
 
                             {noCustomer && (
-                                <Alert variant="warning" className="mb-0">
+                                <Alert variant="info" className="mb-0">
                                     No customers waiting.
                                 </Alert>
                             )}
 
                             {ticket && (
-                                <Card className="border-success bg-light">
+                                <Card className="border-primary bg-light">
                                     <Card.Body>
                                         <Card.Subtitle className="mb-2 text-muted">
                                             Currently Serving
                                         </Card.Subtitle>
-                                        <Card.Title className="display-4 fw-bold text-success mb-0">
+                                        <Card.Title className="display-4 fw-bold text-primary mb-0">
                                             {ticket.code}
                                         </Card.Title>
                                         <Card.Text className="mb-0">
