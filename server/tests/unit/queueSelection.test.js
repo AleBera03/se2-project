@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getCounterQueues } from '../../dao.js';
+import { getCounterQueues } from '../../dao/ticket-dao.js';
 import { selectQueue, chooseQueueForCounter } from '../../queueService.js';
 
-vi.mock('../../dao.js', () => ({
+vi.mock('../../dao/ticket-dao.js', () => ({
   getCounterQueues: vi.fn(),
 }));
 

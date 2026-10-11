@@ -1,4 +1,5 @@
 import db from '../../db.js';
+import { initializeAccounts } from '../../init/init-accounts.js';
 
 export const run = (sql, params = []) => new Promise((resolve, reject) => {
   db.run(sql, params, function (err) {
@@ -28,6 +29,7 @@ export async function resetTestDb() {
   for (const { name } of tables) await exec(`DELETE FROM "${name}"`);
   await exec('PRAGMA foreign_keys = ON');
   await seedFixtures();
+  await initializeAccounts(db);
 }
 
 // counter 1: services 1, 2 - counter 2: services 2, 3 - no tickets

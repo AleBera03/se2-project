@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import db, { runAsync, transaction } from '../../db.js';
-import { createTicket } from '../../dao.js';
+import { createTicket } from '../../dao/ticket-dao.js';
 
 vi.mock('../../db.js', () => ({
   default: {
@@ -127,7 +127,7 @@ describe('createTicket — unit tests', () => {
     expect(db.get).toHaveBeenNthCalledWith(
       3,
       expect.any(String),
-      ['A000'],
+      ['A000', '2026-10-11'],
       expect.any(Function)
     );
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 
 import app from '../../app.js';
@@ -7,6 +7,27 @@ import { all, run } from '../helpers/testDb.js';
 // fixtures
 // counter 1 -> services 1 (A, 5 min), 2 (C, 7 min)
 // counter 2 -> services 2, 3 (I, 15 min)
+let officers;
+
+// Create authenticated sessions for the two fixture counters.
+beforeEach(async () => {
+  officers = {
+    1: request.agent(app),
+    2: request.agent(app),
+  };
+
+  for (const counterId of [1, 2]) {
+    const response = await officers[counterId]
+      .post('/api/sessions')
+      .send({
+        username: `counter${counterId}`,
+        password: `Counter${counterId}!`,
+      });
+
+    expect(response.status).toBe(201);
+  }
+});
+
 const issue = async (serviceId, count = 1) => {
   for (let i = 0; i < count; i++) {
     const response = await request(app)
@@ -18,7 +39,7 @@ const issue = async (serviceId, count = 1) => {
 };
 
 const callNext = async (counterId) => {
-  const response = await request(app).post(`/api/counters/${counterId}/next`);
+  const response = await officers[counterId].post(`/api/counters/${counterId}/next`);
 
   expect(response.status).toBe(200);
   return response.body;
@@ -47,7 +68,10 @@ describe('Next customer — API and database integration', () => {
       counter_id: 1,
     };
 
-    expect(called).toEqual(expected);
+    expect(called).toEqual({
+    ...expected,
+    service_name: 'Mail and Parcels',
+    });
     expect(await tickets()).toEqual(
       before.map((ticket) => (ticket.id === expected.id ? expected : ticket)),
     );
@@ -96,8 +120,13 @@ describe('Next customer — API and database integration', () => {
 
     expect(called).toHaveLength(5);
     expect(new Set(called.map((ticket) => ticket.id)).size).toBe(5);
-    expect(await all("SELECT * FROM Ticket WHERE status = 'served' ORDER BY id"))
-      .toEqual(called);
+    expect(await all(`
+        SELECT t.*, s.name AS service_name
+        FROM Ticket AS t
+        JOIN Service AS s ON s.id = t.service_id
+        WHERE t.status = 'served'
+        ORDER BY t.id
+    `)).toEqual(called);
     expect(await queueLengths()).toEqual({ 1: 0, 2: 0, 3: 0 });
   });
 
@@ -115,7 +144,13 @@ describe('Next customer — API and database integration', () => {
     expect(rows).toHaveLength(5);
     expect(new Set(rows.map((ticket) => ticket.code)).size).toBe(5);
     expect(called.length).toBeGreaterThanOrEqual(2);
-    expect(rows.filter((ticket) => ticket.status === 'served')).toEqual(called);
+    expect(await all(`
+        SELECT t.*, s.name AS service_name
+        FROM Ticket AS t
+        JOIN Service AS s ON s.id = t.service_id
+        WHERE t.status = 'served'
+        ORDER BY t.id
+    `)).toEqual(called);
     expect((await queueLengths())[2]).toBe(5 - called.length);
   });
 
@@ -125,7 +160,7 @@ describe('Next customer — API and database integration', () => {
       await issue(1, 1);
       const before = await tickets();
 
-      const response = await request(app).post(`/api/counters/${counterId}/next`);
+      const response = await officers[1].post(`/api/counters/${counterId}/next`);
 
       expect(response.status).toBe(400);
       expect(response.body.error).toEqual(expect.any(String));
@@ -133,13 +168,13 @@ describe('Next customer — API and database integration', () => {
     },
   );
 
-  it('returns 404 for an unknown counter without modifying tickets', async () => {
+  it('rejects an unassigned counter without modifying tickets', async () => {
     await issue(1, 1);
     const before = await tickets();
 
-    const response = await request(app).post('/api/counters/99/next');
+    const response = await officers[1].post('/api/counters/99/next');
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(403);
     expect(response.body.error).toEqual(expect.any(String));
     expect(await tickets()).toEqual(before);
   });
@@ -158,7 +193,7 @@ describe('Next customer — API and database integration', () => {
     `);
 
     try {
-      const response = await request(app).post('/api/counters/1/next');
+      const response = await officers[1].post('/api/counters/1/next');
 
       expect(response.status).toBe(500);
       expect(response.body.error).toEqual(expect.any(String));
