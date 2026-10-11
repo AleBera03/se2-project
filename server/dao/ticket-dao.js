@@ -41,7 +41,9 @@ export const getFirstWaitingTicket = (serviceId) => {
                 s.name AS service_name
             FROM Ticket AS t
             JOIN Service AS s ON s.id = t.service_id
-            WHERE t.service_id = ? AND t.status = 'waiting'
+            WHERE t.service_id = ?
+                AND t.status = 'waiting'
+                AND t.ticket_date = strftime('%Y-%m-%d', 'now')
             ORDER BY t.created_at, t.id
             LIMIT 1
         `;

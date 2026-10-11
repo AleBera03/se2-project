@@ -129,4 +129,40 @@ describe('assignNextTicket', () => {
     }
   });
 
+  it('ignores previous-day waiting tickets and assigns today’s ticket', async () => {
+    const previousTicket = await createTicket(1);
+
+    await run(`
+      UPDATE Ticket
+      SET ticket_date = date('now', '-1 day'),
+          created_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-1 day')
+      WHERE id = ?
+    `, [previousTicket.id]);
+
+    const currentTicket = await createTicket(1);
+
+    const assigned = await assignNextTicket(1);
+
+    expect(assigned).toMatchObject({
+      id: currentTicket.id,
+      status: 'served',
+      counter_id: 1,
+    });
+
+    expect(await tickets()).toEqual([
+      {
+        id: previousTicket.id,
+        service_id: 1,
+        status: 'waiting',
+        counter_id: null,
+      },
+      {
+        id: currentTicket.id,
+        service_id: 1,
+        status: 'served',
+        counter_id: 1,
+      },
+    ]);
+  });
+
 });
