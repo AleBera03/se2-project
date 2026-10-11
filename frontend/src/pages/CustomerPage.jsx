@@ -10,6 +10,8 @@ function CustomerPage() {
 
     const {
         services,
+        isLoadingServices,
+        servicesError,
         selectedService,
         handleSelectService,
         showTicketConfirmation,
@@ -29,6 +31,12 @@ function CustomerPage() {
                     title="Choose a service"
                     description="Select the service you need."
                 />
+
+                {!isLoadingServices && servicesError && (
+                    <Alert variant="danger">
+                        {servicesError}
+                    </Alert>
+                )}
 
                 {selectedService && (
                     <Alert 
@@ -57,12 +65,14 @@ function CustomerPage() {
                     </Alert>
                 )}
 
-                <ServiceSelection
-                    services={services}
-                    selectedServiceId={selectedService?.id}
-                    onSelectService={handleSelectService}
-                    isGeneratingTicket={isGeneratingTicket}
-                />
+                {!isLoadingServices && !servicesError && (
+                    <ServiceSelection
+                        services={services}
+                        selectedServiceId={selectedService?.id}
+                        onSelectService={handleSelectService}
+                        isGeneratingTicket={isGeneratingTicket}
+                    />
+                )}
 
                 <TicketConfirmation
                     show={showTicketConfirmation}

@@ -24,3 +24,20 @@ export async function createTicket(serviceId) {
 
     return data;
 }
+
+/**
+ * Retrieves the available services.
+ *
+ * @returns {Promise<Array<{id: number, name: string}>>}
+ * The services returned by the API.
+ */
+export async function getServices() {
+    const response = await fetch(`${BASE_URL}/services`);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error ?? 'Unable to retrieve services.');
+    }
+
+    return data;
+}

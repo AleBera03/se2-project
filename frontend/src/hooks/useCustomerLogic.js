@@ -1,46 +1,64 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { createTicket } from "../API/API.mjs";
-
-const mockServices = [
-    { id: 1, name: "Postal Payment Slips (up to 5)" },
-    {
-        id: 2,
-        name: "Deposits, Withdrawals, F24, Top-ups and Other Payments"
-    },
-    { id: 3, name: "Mail and Parcels" },
-    { id: 4, name: "Postepay Cards, Energy and Phone Services" },
-    { id: 5, name: "Public Administration Services - Polis" },
-    { id: 6, name: "Postal Savings Bonds and Savings Books" },
-    { id: 7, name: "Motor Insurance" },
-    {
-        id: 8,
-        name: "Current Accounts, Loans, Investments and Insurance"
-    },
-    { id: 9, name: "SPID" },
-    { id: 10, name: "Residence Permits" },
-    { id: 11, name: "Other" }
-];
+import { createTicket, getServices } from "../API/API.mjs";
 
 function useCustomerLogic() {
+
+    // State of the available services.
+    const [services, setServices] = useState([]);
+    const [isLoadingServices, setIsLoadingServices] = useState(true);
+    const [servicesError, setServicesError] = useState(null);
+
+    // Retrieves services when the page opens.
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadServices() {
+            try {
+                const availableServices = await getServices();
+
+                if (!cancelled) {
+                    setServices(availableServices);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setServicesError(
+                        error instanceof Error
+                            ? error.message
+                            : "Unable to retrieve services."
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingServices(false);
+                }
+            }
+        }
+
+        loadServices();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     // State of the service selected by the customer.
     const [selectedService, setSelectedService] = useState(null);
 
-    // State of the ticket confirmation modal.
+    // State of ticket generation and confirmation.
     const [showTicketConfirmation, setShowTicketConfirmation] = useState(false);
     const [ticket, setTicket] = useState(null);
     const [ticketError, setTicketError] = useState(null);
     const [isGeneratingTicket, setIsGeneratingTicket] = useState(false);
     const requestInProgress = useRef(false);
 
-    // Select the service requested by the customer.
+    // Generates a ticket for the selected service.
     const handleSelectService = async (service) => {
         if (requestInProgress.current) {
             return;
         }
 
-        setSelectedService(service);
+        setSelectedService(service); 
         setTicket(null);
         setTicketError(null);
         setIsGeneratingTicket(true);
@@ -51,7 +69,7 @@ function useCustomerLogic() {
 
             setTicket({
                 ...createdTicket,
-                createdAt: createdTicket.createdAt ?? createdTicket.created_at
+                createdAt: createdTicket.created_at
             });
             setShowTicketConfirmation(true);
         } catch (error) {
@@ -66,7 +84,7 @@ function useCustomerLogic() {
         }
     };
 
-    // Close the ticket confirmation and reset the selected service.
+    // Closes the confirmation and resets the selected service.
     const handleCloseTicketConfirmation = () => {
         setShowTicketConfirmation(false);
         setSelectedService(null);
@@ -75,7 +93,9 @@ function useCustomerLogic() {
     };
 
     return {
-        services: mockServices,
+        services,
+        isLoadingServices,
+        servicesError,
         selectedService,
         handleSelectService,
         showTicketConfirmation,
