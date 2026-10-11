@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { run, all } from '../helpers/testDb.js';
+import { run, get, all } from '../helpers/testDb.js';
 import { assignNextTicket } from '../../queueService.js';
 import { createTicket } from '../../dao.js';
 
@@ -18,8 +18,7 @@ const addWaiting = async (serviceId, count = 1, createdAt) => {
     }
   }
 };
-const tickets = () =>
-  all('SELECT id, service_id, status, counter_id FROM Ticket ORDER BY id');
+const tickets = () => all('SELECT id, service_id, status, counter_id FROM Ticket ORDER BY id');
 
 describe('assignNextTicket', () => {
   it('assigns the oldest waiting ticket of the selected queue', async () => {
@@ -72,4 +71,62 @@ describe('assignNextTicket', () => {
     await expect(assignNextTicket(0)).rejects.toThrow(/positive integer/);
     expect(await tickets()).toEqual(before);
   });
+
+  it('preserves a concurrent new ticket when assignment rolls back', async () => {
+    const original = await createTicket(1);
+
+    // Integration test: force an assignment failure in the real database.
+    await run(`
+      CREATE TEMP TRIGGER fail_ticket_assignment
+      BEFORE UPDATE OF status ON Ticket
+      WHEN NEW.status = 'served'
+      BEGIN
+        SELECT RAISE(ABORT, 'Simulated assignment failure');
+      END
+    `);
+
+    try {
+      const [assignment, creation] = await Promise.allSettled([
+        assignNextTicket(1),
+        createTicket(1),
+      ]);
+
+      expect(assignment.status).toBe('rejected');
+      expect(assignment.reason.message)
+        .toContain('Simulated assignment failure');
+
+      expect(creation.status).toBe('fulfilled');
+
+      const newTicket = creation.value;
+
+      expect(newTicket.id).not.toBe(original.id);
+      expect(newTicket.code).toBe('A001');
+
+      expect(await get(`
+        SELECT status, counter_id
+        FROM Ticket
+        WHERE id = ?
+      `, [original.id])).toEqual({
+        status: 'waiting',
+        counter_id: null,
+      });
+
+      expect(await get(`
+        SELECT code, service_id, status, counter_id
+        FROM Ticket
+        WHERE id = ?
+      `, [newTicket.id])).toEqual({
+        code: 'A001',
+        service_id: 1,
+        status: 'waiting',
+        counter_id: null,
+      });
+
+      expect(await get('SELECT COUNT(*) AS count FROM Ticket'))
+        .toEqual({ count: 2 });
+    } finally {
+      await run('DROP TRIGGER IF EXISTS fail_ticket_assignment');
+    }
+  });
+
 });
