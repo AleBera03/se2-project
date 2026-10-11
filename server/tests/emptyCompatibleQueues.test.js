@@ -1,70 +1,65 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL, fileURLToPath } from 'node:url';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const queueServicePath = fileURLToPath(new URL('../queueService.js', import.meta.url));
-const row = (serviceId, queueLength, averageServiceTime) => ({ serviceId, queueLength, averageServiceTime });
+// Mock external dependencies, but test the real queueService.js implementation.
+const mocks = vi.hoisted(() => ({
+  getCounterQueues: vi.fn(),
+  getFirstWaitingTicket: vi.fn(),
+  assignTicket: vi.fn(),
+  transaction: vi.fn(),
+}));
 
-async function loadWithQueues(queues) {
-  const dir = await mkdtemp(join(tmpdir(), 'empty-compatible-queues-'));
-  try {
-    await writeFile(join(dir, 'package.json'), '{"type":"module"}');
-    // Copy the project's actual implementation, not a duplicate of its logic.
-    await writeFile(join(dir, 'queueService.js'), await readFile(queueServicePath));
-    await writeFile(join(dir, 'dao.js'), `
-      export const calls = { getCounterQueues: 0, getFirstWaitingTicket: 0, assignTicket: 0 };
-      export async function getCounterQueues() { calls.getCounterQueues++; return ${JSON.stringify(queues)}; }
-      export async function getFirstWaitingTicket() { calls.getFirstWaitingTicket++; throw new Error('Should not fetch tickets'); }
-      export async function assignTicket() { calls.assignTicket++; throw new Error('Should not assign tickets'); }
-    `);
-    await writeFile(join(dir, 'db.js'), `
-      export const transactionCalls = { count: 0 };
-      export async function transaction(callback) { transactionCalls.count++; return await callback(); }
-    `);
-    const service = await import(pathToFileURL(join(dir, 'queueService.js')).href);
-    const dao = await import(pathToFileURL(join(dir, 'dao.js')).href);
-    return { ...service, calls: dao.calls, cleanup: () => rm(dir, { recursive: true, force: true }) };
-  } catch (err) {
-    await rm(dir, { recursive: true, force: true });
-    throw err;
-  }
-}
+vi.mock('../dao.js', () => ({
+  getCounterQueues: mocks.getCounterQueues,
+  getFirstWaitingTicket: mocks.getFirstWaitingTicket,
+  assignTicket: mocks.assignTicket,
+}));
 
-test('returns null when all compatible queues have no waiting tickets', async () => {
-  const s = await loadWithQueues([row(1, 0, 5), row(2, 0, 7)]);
-  try { assert.equal(await s.chooseQueueForCounter(1), null); }
-  finally { await s.cleanup(); }
+vi.mock('../db.js', () => ({ transaction: mocks.transaction }));
+
+import { chooseQueueForCounter, selectQueue, assignNextTicket } from '../queueService.js';
+
+const queue = (serviceId, queueLength, averageServiceTime) => ({
+  serviceId,
+  queueLength,
+  averageServiceTime,
 });
 
-test('returns null when counter has no compatible services', async () => {
-  const s = await loadWithQueues([]);
-  try { assert.equal(await s.chooseQueueForCounter(1), null); }
-  finally { await s.cleanup(); }
+beforeEach(() => {
+  vi.resetAllMocks();
+  mocks.transaction.mockImplementation(async (callback) => callback());
 });
 
-test('empty selection does not mutate its input queue records', async () => {
-  const s = await loadWithQueues([]);
-  try {
-    const queues = Object.freeze([Object.freeze(row(1, 0, 5)), Object.freeze(row(2, 0, 7))]);
-    assert.equal(s.selectQueue(queues), null);
-    assert.deepEqual(queues, [row(1, 0, 5), row(2, 0, 7)]);
-  } finally { await s.cleanup(); }
-});
+describe('Handle empty compatible queues', () => {
+  it('returns null when all compatible queues have no waiting tickets', async () => {
+    mocks.getCounterQueues.mockResolvedValue([queue(1, 0, 5), queue(2, 0, 7)]);
+    await expect(chooseQueueForCounter(1)).resolves.toBeNull();
+    expect(mocks.getCounterQueues).toHaveBeenCalledExactlyOnceWith(1);
+  });
 
-test('nonempty compatible queue remains selectable', async () => {
-  const s = await loadWithQueues([row(1, 0, 5), row(2, 2, 7)]);
-  try { assert.equal((await s.chooseQueueForCounter(1)).serviceId, 2); }
-  finally { await s.cleanup(); }
-});
+  it('returns null when a counter has no compatible services', async () => {
+    mocks.getCounterQueues.mockResolvedValue([]);
+    await expect(chooseQueueForCounter(1)).resolves.toBeNull();
+  });
 
-test('empty queues do not fetch or assign tickets through assignNextTicket', async () => {
-  const s = await loadWithQueues([row(1, 0, 5), row(2, 0, 7)]);
-  try {
-    assert.equal(await s.assignNextTicket(1), null);
-    assert.equal(s.calls.getFirstWaitingTicket, 0);
-    assert.equal(s.calls.assignTicket, 0);
-  } finally { await s.cleanup(); }
+  it('does not mutate input queue records when queues are empty', () => {
+    const queues = Object.freeze([
+      Object.freeze(queue(1, 0, 5)),
+      Object.freeze(queue(2, 0, 7)),
+    ]);
+    expect(selectQueue(queues)).toBeNull();
+    expect(queues).toEqual([queue(1, 0, 5), queue(2, 0, 7)]);
+  });
+
+  it('still selects a compatible queue when one has waiting tickets', async () => {
+    mocks.getCounterQueues.mockResolvedValue([queue(1, 0, 5), queue(2, 2, 7)]);
+    await expect(chooseQueueForCounter(1)).resolves.toMatchObject({ serviceId: 2 });
+  });
+
+  it('does not fetch or assign individual tickets when all queues are empty', async () => {
+    mocks.getCounterQueues.mockResolvedValue([queue(1, 0, 5), queue(2, 0, 7)]);
+    await expect(assignNextTicket(1)).resolves.toBeNull();
+    expect(mocks.transaction).toHaveBeenCalledOnce();
+    expect(mocks.getFirstWaitingTicket).not.toHaveBeenCalled();
+    expect(mocks.assignTicket).not.toHaveBeenCalled();
+  });
 });
