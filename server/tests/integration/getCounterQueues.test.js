@@ -45,10 +45,10 @@ async function fixture() {
   sqlite.exec(`
     CREATE TABLE Service (id INTEGER PRIMARY KEY, name TEXT NOT NULL, service_time REAL NOT NULL);
     CREATE TABLE CounterService (counter_id INTEGER NOT NULL, service_id INTEGER NOT NULL, PRIMARY KEY(counter_id, service_id));
-    CREATE TABLE Ticket (id INTEGER PRIMARY KEY, service_id INTEGER NOT NULL, status TEXT NOT NULL);
+    CREATE TABLE Ticket (id INTEGER PRIMARY KEY, service_id INTEGER NOT NULL, status TEXT NOT NULL, ticket_date TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d', 'now')));
     INSERT INTO Service VALUES (1, 'Payments', 5), (2, 'Mail', 7), (3, 'Insurance', 20);
     INSERT INTO CounterService VALUES (1, 1), (1, 2), (2, 3);
-    INSERT INTO Ticket VALUES (1, 1, 'waiting'), (2, 1, 'waiting'), (3, 1, 'served'), (4, 3, 'waiting');
+    INSERT INTO Ticket (id, service_id, status) VALUES (1, 1, 'waiting'), (2, 1, 'waiting'), (3, 1, 'served'), (4, 3, 'waiting');
   `);
   return { ...dao, sqlite, db, async cleanup() { sqlite.close(); await rm(dir, { recursive: true, force: true }); } };
 }
@@ -103,4 +103,46 @@ test('retrieval does not modify tickets', async () => {
     const after = f.sqlite.prepare('SELECT id, service_id, status FROM Ticket ORDER BY id').all();
     assert.deepEqual(after, before);
   } finally { await f.cleanup(); }
+});
+
+test('excludes previous-day tickets without deleting them', async () => {
+  const f = await fixture();
+
+  try {
+    // Move existing waiting tickets to the previous day.
+    f.sqlite.exec(`
+      UPDATE Ticket
+      SET ticket_date = date('now', '-1 day')
+      WHERE status = 'waiting';
+
+      INSERT INTO Ticket (id, service_id, status)
+      VALUES (5, 2, 'waiting');
+    `);
+
+    const before = f.sqlite.prepare(
+      'SELECT * FROM Ticket ORDER BY id'
+    ).all();
+
+    assert.deepEqual(await f.getCounterQueues(1), [
+      {
+        serviceId: 1,
+        serviceName: 'Payments',
+        averageServiceTime: 5,
+        queueLength: 0,
+      },
+      {
+        serviceId: 2,
+        serviceName: 'Mail',
+        averageServiceTime: 7,
+        queueLength: 1,
+      },
+    ]);
+
+    assert.deepEqual(
+      f.sqlite.prepare('SELECT * FROM Ticket ORDER BY id').all(),
+      before
+    );
+  } finally {
+    await f.cleanup();
+  }
 });
