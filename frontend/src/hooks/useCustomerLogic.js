@@ -66,11 +66,7 @@ function useCustomerLogic() {
 
         try {
             const createdTicket = await createTicket(service.id);
-
-            setTicket({
-                ...createdTicket,
-                createdAt: createdTicket.created_at
-            });
+            setTicket(createdTicket);
             setShowTicketConfirmation(true);
         } catch (error) {
             setTicketError(

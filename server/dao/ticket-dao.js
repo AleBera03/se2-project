@@ -1,5 +1,7 @@
 import db, { runAsync, transaction } from "../db.js";
 
+import { Service, Ticket } from "../models.js";
+
 const MAX_DAILY_TICKET_NUMBER = 999;
 
 /**
@@ -19,7 +21,7 @@ export const getServices = () => {
                 return;
             }
 
-            resolve(rows);
+            resolve(rows.map(row => new Service(row.id, row.name)));
         });
     });
 };
@@ -50,7 +52,7 @@ export const getFirstWaitingTicket = (serviceId) => {
 
         db.get(sql, [serviceId], (err, row) => {
             if (err) reject(err);
-            else resolve(row);
+            else resolve(row ? new Ticket(row) : undefined);
         });
     });
 };
@@ -187,10 +189,12 @@ export async function createTicket(serviceId) {
             VALUES (?, ?, ?, ?)
         `, [serviceId, dailyNumber, service.ticketDate, code]);
 
-        return getRow(`
+        const ticket = await getRow(`
             SELECT id, code, service_id, status, created_at
             FROM Ticket
             WHERE id = ?
         `, [result.lastID]);
+
+        return new Ticket(ticket);
     });
 }

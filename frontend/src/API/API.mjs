@@ -1,12 +1,10 @@
+import { Service, Ticket, User } from "../models/models.js";
+
 const BASE_URL = 'http://localhost:3001/api';
 
 /**
  * Creates a waiting ticket for the selected service.
- *
- * @param {number} serviceId The id of an existing service.
- * @returns {Promise<object>} The ticket returned by the API.
  */
-
 export async function createTicket(serviceId) {
     const response = await fetch(`${BASE_URL}/tickets`, {
         method: 'POST',
@@ -22,14 +20,11 @@ export async function createTicket(serviceId) {
         throw new Error(data.error ?? 'Unable to create ticket.');
     }
 
-    return data;
+    return new Ticket(data);
 }
 
 /**
  * Retrieves the available services.
- *
- * @returns {Promise<Array<{id: number, name: string}>>}
- * The services returned by the API.
  */
 export async function getServices() {
     const response = await fetch(`${BASE_URL}/services`);
@@ -39,11 +34,11 @@ export async function getServices() {
         throw new Error(data.error ?? 'Unable to retrieve services.');
     }
 
-    return data;
+    return data.map(service => new Service(service));
 }
 
 /**
- * Assign the next waiting ticket to the authenticated counter.
+ * Assigns the next waiting ticket to the authenticated counter.
  */
 export async function callNextCustomer(counterId) {
     const response = await fetch(
@@ -62,11 +57,13 @@ export async function callNextCustomer(counterId) {
         );
     }
 
-    return response.json();
+    const data = await response.json();
+
+    return data === null ? null : new Ticket(data);
 }
 
 /**
- * Log in with a preconfigured counter account.
+ * Logs in with a preconfigured counter account.
  */
 export async function login(username, password) {
     const response = await fetch(`${BASE_URL}/sessions`, {
@@ -84,11 +81,11 @@ export async function login(username, password) {
         throw new Error(data.error ?? "Unable to log in.");
     }
 
-    return data;
+    return new User(data);
 }
 
 /**
- * Restore the current session, or return null when not authenticated.
+ * Restores the current session or returns null when not authenticated.
  */
 export async function getCurrentUser() {
     const response = await fetch(`${BASE_URL}/sessions/current`, {
@@ -105,11 +102,11 @@ export async function getCurrentUser() {
         throw new Error(data.error ?? "Unable to retrieve the session.");
     }
 
-    return data;
+    return new User(data);
 }
 
 /**
- * End the current session.
+ * Ends the current session.
  */
 export async function logout() {
     const response = await fetch(`${BASE_URL}/sessions/current`, {
