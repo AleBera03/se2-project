@@ -14,7 +14,9 @@ vi.mock('../../db.js', () => ({
   transaction: vi.fn(),
 }));
 
-// Configure the next mocked database read.
+/**
+ * Configures the next mocked database read.
+ */
 const nextRow = (row) => {
   vi.mocked(db.get).mockImplementationOnce((sql, params, callback) => {
     callback(null, row);
@@ -25,7 +27,7 @@ describe('createTicket — unit tests', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
-    // Execute the callback without opening a real transaction.
+    // Executes the callback without opening a real transaction.
     vi.mocked(transaction).mockImplementation(
       async (callback) => callback()
     );
@@ -93,7 +95,7 @@ describe('createTicket — unit tests', () => {
         [1, expectedNumber, ticketDate, expectedCode]
       );
 
-      // Look up the returned ticket using the ID from the insertion.
+      // Verifies that the saved ticket is retrieved using the insertion ID.
       expect(db.get).toHaveBeenLastCalledWith(
         expect.any(String),
         [12],

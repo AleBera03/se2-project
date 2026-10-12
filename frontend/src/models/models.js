@@ -1,21 +1,27 @@
-export class Service {
+class Service {
     constructor(data) {
         this.id = data.id;
         this.name = data.name;
     }
 }
 
-export class Ticket {
+class Ticket {
     constructor(data) {
         Object.assign(this, data);
         this.createdAt = data.created_at;
     }
 }
 
-export class User {
+class User {
     constructor(data) {
         this.id = data.id;
         this.username = data.username;
         this.counterId = data.counterId;
     }
 }
+
+export {
+    Service,
+    Ticket,
+    User
+};

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { createTicket } from '../../dao/ticket-dao.js';
 
 describe('createTicket', () => {

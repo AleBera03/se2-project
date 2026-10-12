@@ -5,7 +5,6 @@ import { useOfficerContext } from "../../context/OfficerContext";
 function OfficerNavbar() {
     const { user, busy, handleLogout } = useOfficerContext();
 
-    // Show the navbar only after the officer logs in.
     if (!user) {
         return null;
     }

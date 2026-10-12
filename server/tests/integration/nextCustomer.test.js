@@ -4,12 +4,12 @@ import request from 'supertest';
 import app from '../../app.js';
 import { all, run } from '../helpers/testDb.js';
 
-// fixtures
-// counter 1 -> services 1 (A, 5 min), 2 (C, 7 min)
-// counter 2 -> services 2, 3 (I, 15 min)
+// Fixtures: Counter 1 serves services 1 (A, 5 min) and 2 (C, 7 min).
+// Counter 2 serves services 2 (C, 7 min) and 3 (I, 15 min). No tickets are initially present.
+
 let officers;
 
-// Create authenticated sessions for the two fixture counters.
+// Creates authenticated sessions for the two fixture counters.
 beforeEach(async () => {
   officers = {
     1: request.agent(app),
@@ -28,6 +28,9 @@ beforeEach(async () => {
   }
 });
 
+/**
+ * Issues tickets through the public API.
+ */
 const issue = async (serviceId, count = 1) => {
   for (let i = 0; i < count; i++) {
     const response = await request(app)
@@ -38,6 +41,9 @@ const issue = async (serviceId, count = 1) => {
   }
 };
 
+/**
+ * Calls the next customer through an authenticated counter session.
+ */
 const callNext = async (counterId) => {
   const response = await officers[counterId].post(`/api/counters/${counterId}/next`);
 
@@ -45,8 +51,14 @@ const callNext = async (counterId) => {
   return response.body;
 };
 
+/**
+ * Retrieves all tickets for persistence checks.
+ */
 const tickets = () => all('SELECT * FROM Ticket ORDER BY id');
 
+/**
+ * Counts waiting tickets for each service.
+ */
 const queueLengths = async () => Object.fromEntries((await all(`
   SELECT s.id, COUNT(t.id) AS length
   FROM Service AS s
@@ -69,8 +81,8 @@ describe('Next customer — API and database integration', () => {
     };
 
     expect(called).toEqual({
-    ...expected,
-    service_name: 'Mail and Parcels',
+      ...expected,
+      service_name: 'Mail and Parcels',
     });
     expect(await tickets()).toEqual(
       before.map((ticket) => (ticket.id === expected.id ? expected : ticket)),
@@ -121,11 +133,11 @@ describe('Next customer — API and database integration', () => {
     expect(called).toHaveLength(5);
     expect(new Set(called.map((ticket) => ticket.id)).size).toBe(5);
     expect(await all(`
-        SELECT t.*, s.name AS service_name
-        FROM Ticket AS t
-        JOIN Service AS s ON s.id = t.service_id
-        WHERE t.status = 'served'
-        ORDER BY t.id
+      SELECT t.*, s.name AS service_name
+      FROM Ticket AS t
+      JOIN Service AS s ON s.id = t.service_id
+      WHERE t.status = 'served'
+      ORDER BY t.id
     `)).toEqual(called);
     expect(await queueLengths()).toEqual({ 1: 0, 2: 0, 3: 0 });
   });
@@ -145,11 +157,11 @@ describe('Next customer — API and database integration', () => {
     expect(new Set(rows.map((ticket) => ticket.code)).size).toBe(5);
     expect(called.length).toBeGreaterThanOrEqual(2);
     expect(await all(`
-        SELECT t.*, s.name AS service_name
-        FROM Ticket AS t
-        JOIN Service AS s ON s.id = t.service_id
-        WHERE t.status = 'served'
-        ORDER BY t.id
+      SELECT t.*, s.name AS service_name
+      FROM Ticket AS t
+      JOIN Service AS s ON s.id = t.service_id
+      WHERE t.status = 'served'
+      ORDER BY t.id
     `)).toEqual(called);
     expect((await queueLengths())[2]).toBe(5 - called.length);
   });
@@ -184,6 +196,7 @@ describe('Next customer — API and database integration', () => {
     await issue(1, 1);
     const before = await tickets();
 
+    // Forces an assignment failure to verify rollback.
     await run(`
       CREATE TEMP TRIGGER fail_next_customer
       BEFORE UPDATE ON Ticket

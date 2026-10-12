@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createTicket, getServices } from "../API/API.mjs";
 
 function useCustomerLogic() {
-
     // State of the available services.
     const [services, setServices] = useState([]);
     const [isLoadingServices, setIsLoadingServices] = useState(true);

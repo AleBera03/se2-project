@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
+
 import app from '../../app.js';
 
 describe('GET /api/health', () => {
-  it('returns 200 when the database is reachable', async () => {
+  it('returns 200 when the API is reachable', async () => {
     const res = await request(app).get('/api/health');
 
     expect(res.status).toBe(200);

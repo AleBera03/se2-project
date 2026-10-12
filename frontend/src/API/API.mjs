@@ -5,7 +5,7 @@ const BASE_URL = 'http://localhost:3001/api';
 /**
  * Creates a waiting ticket for the selected service.
  */
-export async function createTicket(serviceId) {
+async function createTicket(serviceId) {
     const response = await fetch(`${BASE_URL}/tickets`, {
         method: 'POST',
         headers: {
@@ -26,7 +26,7 @@ export async function createTicket(serviceId) {
 /**
  * Retrieves the available services.
  */
-export async function getServices() {
+async function getServices() {
     const response = await fetch(`${BASE_URL}/services`);
     const data = await response.json();
 
@@ -40,7 +40,7 @@ export async function getServices() {
 /**
  * Assigns the next waiting ticket to the authenticated counter.
  */
-export async function callNextCustomer(counterId) {
+async function callNextCustomer(counterId) {
     const response = await fetch(
         `${BASE_URL}/counters/${counterId}/next`,
         {
@@ -65,7 +65,7 @@ export async function callNextCustomer(counterId) {
 /**
  * Logs in with a preconfigured counter account.
  */
-export async function login(username, password) {
+async function login(username, password) {
     const response = await fetch(`${BASE_URL}/sessions`, {
         method: "POST",
         credentials: "include",
@@ -87,7 +87,7 @@ export async function login(username, password) {
 /**
  * Restores the current session or returns null when not authenticated.
  */
-export async function getCurrentUser() {
+async function getCurrentUser() {
     const response = await fetch(`${BASE_URL}/sessions/current`, {
         credentials: "include"
     });
@@ -108,7 +108,7 @@ export async function getCurrentUser() {
 /**
  * Ends the current session.
  */
-export async function logout() {
+async function logout() {
     const response = await fetch(`${BASE_URL}/sessions/current`, {
         method: "DELETE",
         credentials: "include"
@@ -119,4 +119,13 @@ export async function logout() {
         throw new Error(data.error ?? "Unable to log out.");
     }
 }
+
+export {
+    createTicket,
+    getServices,
+    callNextCustomer,
+    login,
+    getCurrentUser,
+    logout
+};
 

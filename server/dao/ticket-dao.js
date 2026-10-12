@@ -1,13 +1,12 @@
 import db, { runAsync, transaction } from "../db.js";
-
 import { Service, Ticket } from "../models.js";
 
 const MAX_DAILY_TICKET_NUMBER = 999;
 
 /**
- * Retrieve the available services.
+ * Retrieves the available services.
  */
-export const getServices = () => {
+const getServices = () => {
     return new Promise((resolve, reject) => {
         const sql = `
             SELECT id, name
@@ -27,10 +26,10 @@ export const getServices = () => {
 };
 
 /**
- * Retrieve the oldest waiting ticket for the selected service.
- * Resolve equal creation timestamps by lowest ticket ID.
+ * Retrieves the oldest waiting ticket for the selected service.
+ * Resolves equal creation timestamps by lowest ticket ID.
  */
-export const getFirstWaitingTicket = (serviceId) => {
+const getFirstWaitingTicket = (serviceId) => {
     return new Promise((resolve, reject) => {
         if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
             reject(new TypeError("serviceId must be a positive integer"));
@@ -58,10 +57,10 @@ export const getFirstWaitingTicket = (serviceId) => {
 };
 
 /**
- * Assign a waiting ticket to a counter and mark it as served.
- * Reject the operation if the ticket is no longer waiting.
+ * Assigns a waiting ticket to a counter and marks it as served.
+ * Rejects the operation if the ticket is no longer waiting.
  */
-export async function assignTicket(ticketId, counterId) {
+async function assignTicket(ticketId, counterId) {
     if (!Number.isSafeInteger(ticketId) || ticketId <= 0) {
         throw new TypeError("ticketId must be a positive integer");
     }
@@ -86,9 +85,9 @@ export async function assignTicket(ticketId, counterId) {
 }
 
 /**
- * Retrieve supported services and waiting-queue lengths for a counter.
+ * Retrieves supported services and waiting-queue lengths for a counter.
  */
-export const getCounterQueues = (counterId) => {
+const getCounterQueues = (counterId) => {
     return new Promise((resolve, reject) => {
         if (!Number.isSafeInteger(counterId) || counterId <= 0) {
             reject(new TypeError("counterId must be a positive integer"));
@@ -124,9 +123,9 @@ export const getCounterQueues = (counterId) => {
 };
 
 /**
- * Create a waiting ticket with a service-specific daily number.
+ * Creates a waiting ticket with a service-specific daily number.
  */
-export async function createTicket(serviceId) {
+async function createTicket(serviceId) {
     if (!Number.isSafeInteger(serviceId) || serviceId <= 0) {
         throw new TypeError("serviceId must be a positive integer");
     }
@@ -198,3 +197,11 @@ export async function createTicket(serviceId) {
         return new Ticket(ticket);
     });
 }
+
+export {
+    getServices,
+    getFirstWaitingTicket,
+    assignTicket,
+    getCounterQueues,
+    createTicket
+};

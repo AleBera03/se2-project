@@ -1,13 +1,13 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { DatabaseSync } from 'node:sqlite';
 import { mkdtemp, mkdir, copyFile, writeFile, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Tests the actual exported dao.js function, not the removed getCounterQueues.js.
-// Uses a private temporary ES-module environment and SQLite memory database.
+/**
+ * Loads the ticket DAO in a temporary module environment with an in-memory database.
+ */
 async function fixture() {
   const dir = await realpath(
     await mkdtemp(join(tmpdir(), 'counter-queues-'))
@@ -45,10 +45,14 @@ async function fixture() {
     }
     export default db;
   `);
+
   const dao = await import(
     pathToFileURL(join(dir, 'dao', 'ticket-dao.js')).href
   );
   const { sqlite, db } = await import(pathToFileURL(join(dir, 'db.js')).href);
+
+  // Fixtures: Counter 1 serves services 1 and 2; Counter 2 serves service 3.
+  // Service 1 has two waiting tickets and one served ticket; service 3 has one waiting ticket.
   sqlite.exec(`
     CREATE TABLE Service (id INTEGER PRIMARY KEY, name TEXT NOT NULL, service_time REAL NOT NULL);
     CREATE TABLE CounterService (counter_id INTEGER NOT NULL, service_id INTEGER NOT NULL, PRIMARY KEY(counter_id, service_id));
@@ -57,21 +61,34 @@ async function fixture() {
     INSERT INTO CounterService VALUES (1, 1), (1, 2), (2, 3);
     INSERT INTO Ticket (id, service_id, status) VALUES (1, 1, 'waiting'), (2, 1, 'waiting'), (3, 1, 'served'), (4, 3, 'waiting');
   `);
-  return { ...dao, sqlite, db, async cleanup() { sqlite.close(); await rm(dir, { recursive: true, force: true }); } };
+
+  return {
+    ...dao,
+    sqlite,
+    db,
+    async cleanup() {
+      sqlite.close();
+      await rm(dir, { recursive: true, force: true });
+    }
+  };
 }
 
 test('returns compatible services and includes empty queues', async () => {
   const f = await fixture();
+
   try {
     assert.deepEqual(await f.getCounterQueues(1), [
       { serviceId: 1, serviceName: 'Payments', averageServiceTime: 5, queueLength: 2 },
       { serviceId: 2, serviceName: 'Mail', averageServiceTime: 7, queueLength: 0 }
     ]);
-  } finally { await f.cleanup(); }
+  } finally {
+    await f.cleanup();
+  }
 });
 
 test('excludes incompatible services', async () => {
   const f = await fixture();
+
   try {
     assert.deepEqual(await f.getCounterQueues(2), [
       { serviceId: 3, serviceName: 'Insurance', averageServiceTime: 20, queueLength: 1 }
@@ -81,12 +98,17 @@ test('excludes incompatible services', async () => {
 
 test('unknown counter returns empty array', async () => {
   const f = await fixture();
-  try { assert.deepEqual(await f.getCounterQueues(99), []); }
-  finally { await f.cleanup(); }
+
+  try {
+    assert.deepEqual(await f.getCounterQueues(99), []);
+  } finally {
+    await f.cleanup();
+  }
 });
 
 test('rejects invalid counter IDs', async () => {
   const f = await fixture();
+
   try {
     for (const id of [0, -1, 1.5, '1', null, NaN]) {
       await assert.rejects(f.getCounterQueues(id), /positive integer/);
@@ -96,14 +118,18 @@ test('rejects invalid counter IDs', async () => {
 
 test('propagates database errors', async () => {
   const f = await fixture();
+
   try {
     f.db.failNext = true;
     await assert.rejects(f.getCounterQueues(1), /database unavailable/);
-  } finally { await f.cleanup(); }
+  } finally {
+    await f.cleanup();
+  }
 });
 
 test('retrieval does not modify tickets', async () => {
   const f = await fixture();
+
   try {
     const before = f.sqlite.prepare('SELECT id, service_id, status FROM Ticket ORDER BY id').all();
     await f.getCounterQueues(1);
@@ -116,7 +142,7 @@ test('excludes previous-day tickets without deleting them', async () => {
   const f = await fixture();
 
   try {
-    // Move existing waiting tickets to the previous day.
+    // Moves existing waiting tickets to the previous day.
     f.sqlite.exec(`
       UPDATE Ticket
       SET ticket_date = date('now', '-1 day')

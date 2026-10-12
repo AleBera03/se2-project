@@ -6,9 +6,6 @@ import { User } from "../models.js";
 
 const scryptAsync = promisify(crypto.scrypt);
 
-/**
- * Reads an account from the database.
- */
 function getRow(sql, params = []) {
     return new Promise((resolve, reject) => {
         db.get(sql, params, (err, row) => {
@@ -25,7 +22,7 @@ function getRow(sql, params = []) {
 /**
  * Verifies credentials and returns the account's public information.
  */
-export async function getUser(username, password) {
+async function getUser(username, password) {
     if (
         typeof username !== "string" ||
         typeof password !== "string" ||
@@ -65,7 +62,7 @@ export async function getUser(username, password) {
 /**
  * Restores the authenticated account from its session identifier.
  */
-export async function getUserById(id) {
+async function getUserById(id) {
     const account = await getRow(`
         SELECT id, username, counter_id AS counterId
         FROM CounterAccount
@@ -76,3 +73,5 @@ export async function getUserById(id) {
         ? new User(account.id, account.username, account.counterId)
         : undefined;
 }
+
+export { getUser, getUserById };

@@ -2,20 +2,18 @@ import { assignTicket, getCounterQueues, getFirstWaitingTicket } from "./dao/tic
 import { transaction } from "./db.js";
 
 /**
- * Read the services compatible with a counter and choose the best nonempty queue.
- * Do not select, update, or assign any individual ticket.
+ * Retrieves compatible queues and selects the best nonempty one.
  */
-export async function chooseQueueForCounter(counterId) {
+async function chooseQueueForCounter(counterId) {
     const queues = await getCounterQueues(counterId);
     return selectQueue(queues);
 }
 
 /**
- * Choose a nonempty queue from the compatible services received.
- * Resolve ties by shortest average service time, then lowest service ID.
- * Do not select, update, or assign any individual ticket.
+ * Selects the longest nonempty queue.
+ * Resolves ties by shortest service time, then lowest service ID.
  */
-export function selectQueue(queues) {
+function selectQueue(queues) {
     if (!Array.isArray(queues)) {
         throw new TypeError("queues must be an array");
     }
@@ -62,16 +60,31 @@ export function selectQueue(queues) {
     );
 }
 
-export async function assignNextTicket(counterId) {
-    // run all in one transaction
+/**
+ * Selects and assigns the next waiting ticket in a single transaction.
+ */
+async function assignNextTicket(counterId) {
     return transaction(async () => {
         const queue = await chooseQueueForCounter(counterId);
+
         if (queue === null) {
             return null;
         }
-        let firstTicket = await getFirstWaitingTicket(queue.serviceId);
-        if (!firstTicket) return null;
+
+        const firstTicket = await getFirstWaitingTicket(queue.serviceId);
+
+        if (!firstTicket) {
+            return null;
+        }
+
         await assignTicket(firstTicket.id, counterId);
+
         return { ...firstTicket, status: 'served', counter_id: counterId };
     })
 }
+
+export {
+    chooseQueueForCounter,
+    selectQueue,
+    assignNextTicket
+};

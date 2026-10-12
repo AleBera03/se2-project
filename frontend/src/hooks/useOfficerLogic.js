@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getCurrentUser, login, logout } from "../API/API.mjs";
 
 function useOfficerLogic() {
+    // State of officer authentication and the login form.
     const [user, setUser] = useState(null);
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -10,7 +11,7 @@ function useOfficerLogic() {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState(null);
 
-    // Restore the officer session when the page opens.
+    // Restores the officer session when the page opens.
     useEffect(() => {
         let cancelled = false;
 
@@ -39,7 +40,7 @@ function useOfficerLogic() {
         };
     }, []);
 
-    // Authenticate the officer and clear the password field.
+    // Authenticates the officer and clears the password field.
     const handleLogin = async (event) => {
         event.preventDefault();
 
@@ -59,7 +60,7 @@ function useOfficerLogic() {
         }
     };
 
-    // End the session and reset the login form.
+    // Ends the session and resets the login form.
     const handleLogout = async () => {
         if (busy) return;
 

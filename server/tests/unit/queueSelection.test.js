@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { getCounterQueues } from '../../dao/ticket-dao.js';
 import { selectQueue, chooseQueueForCounter } from '../../queueService.js';
 
@@ -6,6 +7,9 @@ vi.mock('../../dao/ticket-dao.js', () => ({
   getCounterQueues: vi.fn(),
 }));
 
+/**
+ * Creates a queue record for the tests.
+ */
 const q = (serviceId, queueLength, averageServiceTime) => ({ serviceId, queueLength, averageServiceTime });
 
 describe('selectQueue', () => {
@@ -50,7 +54,9 @@ describe('selectQueue', () => {
 
   it('does not mutate its input', () => {
     const data = Object.freeze([Object.freeze(q(1, 1, 4)), Object.freeze(q(2, 2, 5))]);
+
     selectQueue(data);
+
     expect(data).toEqual([q(1, 1, 4), q(2, 2, 5)]);
   });
 });
@@ -62,6 +68,7 @@ describe('chooseQueueForCounter', () => {
 
   it('selects among the queues returned for the counter', async () => {
     vi.mocked(getCounterQueues).mockResolvedValue([q(10, 4, 8), q(11, 4, 3), q(12, 0, 1)]);
+
     expect((await chooseQueueForCounter(7)).serviceId).toBe(11);
     expect(getCounterQueues).toHaveBeenCalledWith(7);
   });

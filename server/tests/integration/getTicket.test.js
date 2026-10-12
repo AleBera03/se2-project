@@ -4,6 +4,7 @@ import request from 'supertest';
 import app from '../../app.js';
 import { get, run } from '../helpers/testDb.js';
 
+// Fixtures: Services 1, 2 and 3 use prefixes A, C and I. No tickets are initially present.
 describe('Get ticket — API and database integration', () => {
   it('returns the services stored in the database', async () => {
     const response = await request(app).get('/api/services');

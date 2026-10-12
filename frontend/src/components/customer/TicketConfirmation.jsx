@@ -1,5 +1,4 @@
 import { Modal } from "react-bootstrap";
-
 import { useEffect, useState } from "react";
 
 function TicketConfirmation(props) {
@@ -82,7 +81,6 @@ function TicketConfirmation(props) {
                     </p>
 
                     <div className="ticket-details pt-3">
-
                         {hasWaitingEstimate && (
                             <div className="mb-3">
                                 <p className="ticket-description mb-1">
@@ -120,7 +118,6 @@ function TicketConfirmation(props) {
                                 </time>
                             </p>
                         )}
-
                     </div>
                 </div>
             </Modal.Body>
