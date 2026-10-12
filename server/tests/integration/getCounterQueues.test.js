@@ -18,6 +18,10 @@ async function fixture() {
     new URL('../../dao/ticket-dao.js', import.meta.url),
     join(dir, 'dao', 'ticket-dao.js')
   );
+  await copyFile(
+    new URL('../../models.js', import.meta.url),
+    join(dir, 'models.js')
+  );
   await writeFile(join(dir, 'db.js'), `
     import { DatabaseSync } from 'node:sqlite';
     export const sqlite = new DatabaseSync(':memory:');

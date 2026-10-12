@@ -2,11 +2,12 @@ import crypto from "node:crypto";
 import { promisify } from "node:util";
 
 import db from "../db.js";
+import { User } from "../models.js";
 
 const scryptAsync = promisify(crypto.scrypt);
 
 /**
- * Read an account from the database.
+ * Reads an account from the database.
  */
 function getRow(sql, params = []) {
     return new Promise((resolve, reject) => {
@@ -22,7 +23,7 @@ function getRow(sql, params = []) {
 }
 
 /**
- * Verify credentials and return the account's public information.
+ * Verifies credentials and returns the account's public information.
  */
 export async function getUser(username, password) {
     if (
@@ -54,20 +55,24 @@ export async function getUser(username, password) {
         return false;
     }
 
-    return {
-        id: account.id,
-        username: account.username,
-        counterId: account.counterId
-    };
+    return new User(
+        account.id,
+        account.username,
+        account.counterId
+    );
 }
 
 /**
- * Restore the authenticated account from its session identifier.
+ * Restores the authenticated account from its session identifier.
  */
 export async function getUserById(id) {
-    return getRow(`
+    const account = await getRow(`
         SELECT id, username, counter_id AS counterId
         FROM CounterAccount
         WHERE id = ?
     `, [id]);
+
+    return account
+        ? new User(account.id, account.username, account.counterId)
+        : undefined;
 }
