@@ -4,7 +4,6 @@ import { useOfficerContext } from "../context/OfficerContext";
 import NextCustomer from "../components/officer/NextCustomer";
 
 function OfficerPage() {
-
     const {
         user,
         username,

@@ -22,10 +22,9 @@ function all(db, sql, params = []) {
 }
 
 /**
- * Create missing demo accounts without changing existing credentials.
+ * Creates missing demo accounts without changing existing credentials.
  */
-export async function initializeAccounts(db) {
-    // Also supports databases created before authentication was added.
+async function initializeAccounts(db) {
     await run(db, `
         CREATE TABLE IF NOT EXISTS CounterAccount (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,3 +58,5 @@ export async function initializeAccounts(db) {
         `, [username, hash.toString("hex"), salt, counter.id]);
     }
 }
+
+export { initializeAccounts };

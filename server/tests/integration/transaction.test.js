@@ -1,8 +1,16 @@
 import { describe, it, expect } from 'vitest';
+
 import { run, get, all } from '../helpers/testDb.js';
 import { transaction } from '../../db.js';
 
+/**
+ * Delays execution to keep a transaction open during concurrency tests.
+ */
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Inserts a waiting ticket directly within the transaction under test.
+ */
 const addWaiting = async (serviceId) => {
   const row = await get(`
     SELECT
@@ -24,6 +32,10 @@ const addWaiting = async (serviceId) => {
     VALUES (?, ?, ?)
   `, [serviceId, row.dailyNumber, code]);
 };
+
+/**
+ * Retrieves ticket IDs and services for persistence checks.
+ */
 const tickets = () => all('SELECT id, service_id FROM Ticket ORDER BY id');
 
 describe('transaction', () => {
@@ -47,7 +59,9 @@ describe('transaction', () => {
   });
 
   it('keeps working after a failed transaction', async () => {
-    await transaction(async () => { throw new Error('boom'); }).catch(() => {});
+    await transaction(async () => {
+      throw new Error('boom');
+    }).catch(() => {});
 
     await transaction(() => addWaiting(1));
 
@@ -56,6 +70,7 @@ describe('transaction', () => {
 
   it('propagates a COMMIT failure and rolls back', async () => {
     await expect(transaction(async () => {
+      // Defers foreign-key checks until COMMIT to simulate a commit failure.
       await run('PRAGMA defer_foreign_keys = ON');
       await addWaiting(99);
     })).rejects.toThrow(/FOREIGN KEY/);

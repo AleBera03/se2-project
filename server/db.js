@@ -1,8 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import sqlite3 from "sqlite3";
-import fs from "fs";
-import path from "path";
-
-import { fileURLToPath } from "url";
 
 import { initializeData } from "./init/init-db.js";
 import { initializeAccounts } from "./init/init-accounts.js";
@@ -94,9 +93,9 @@ await new Promise((resolve, reject) => {
 await initializeData(db);
 await initializeAccounts(db);
 
-// HELPERS
+/* HELPERS */
 
-export function runAsync(sql, params = []) {
+function runAsync(sql, params = []) {
     return new Promise((resolve, reject) => {
         db.run(sql, params, function (err) {
             if (err) {
@@ -109,9 +108,13 @@ export function runAsync(sql, params = []) {
     });
 }
 
-export function transaction(callback) {
+/**
+ * Runs transactions sequentially and rolls back failed operations.
+ */
+function transaction(callback) {
     const execute = async () => {
         await runAsync('BEGIN TRANSACTION');
+
         try {
             const res = await callback();
             await runAsync('COMMIT');
@@ -121,9 +124,11 @@ export function transaction(callback) {
             throw err;
         }
     };
+
     const result = queue.then(execute);
     queue = result.catch(() => {});
     return result;
 }
 
+export { runAsync, transaction };
 export default db;

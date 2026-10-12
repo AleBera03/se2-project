@@ -1,13 +1,11 @@
 import { Alert, Button, Container, Stack } from "react-bootstrap";
 
 import { useCustomerLogic } from "../hooks/useCustomerLogic";
-
 import PageHeader from "../components/common/PageHeader";
 import ServiceSelection from "../components/customer/ServiceSelection";
 import TicketConfirmation from "../components/customer/TicketConfirmation";
 
 function CustomerPage() {
-
     const {
         services,
         isLoadingServices,
@@ -24,7 +22,6 @@ function CustomerPage() {
     return (
         <Container fluid className="p-0">
             <Stack gap={4}>
-
                 <PageHeader
                     className="customer-header text-center"
                     kicker="Office Queue Management"
@@ -39,7 +36,7 @@ function CustomerPage() {
                 )}
 
                 {selectedService && (
-                    <Alert 
+                    <Alert
                         className="service-selection-feedback"
                         variant={ticketError ? "danger" : "primary"}
                         role="status"
@@ -80,7 +77,6 @@ function CustomerPage() {
                     ticket={ticket}
                     service={selectedService}
                 />
-
             </Stack>
         </Container>
     );

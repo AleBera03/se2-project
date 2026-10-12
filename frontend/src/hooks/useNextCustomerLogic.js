@@ -3,13 +3,14 @@ import { useRef, useState } from "react";
 import { callNextCustomer } from "../API/API.mjs";
 
 function useNextCustomerLogic(counterId) {
+    // State of the next-customer request and result.
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [noCustomer, setNoCustomer] = useState(false);
     const requestInProgress = useRef(false);
 
-    // Call the next customer and prevent simultaneous requests.
+    // Calls the next customer and prevents overlapping requests.
     const handleNextCustomer = async () => {
         if (requestInProgress.current) {
             return;

@@ -1,14 +1,12 @@
+import crypto from "node:crypto";
+import express from "express";
+import cors from "cors";
 import { Passport } from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
-import crypto from "node:crypto";
-
-import { getUser, getUserById } from "./dao/auth-dao.js";
-
-import express from "express";
-import cors from "cors";
 
 import db from "./db.js";
+import { getUser, getUserById } from "./dao/auth-dao.js";
 import { createTicket, getServices } from "./dao/ticket-dao.js";
 import { assignNextTicket } from "./queueService.js";
 
@@ -16,7 +14,7 @@ const app = express();
 
 const passport = new Passport();
 
-// Verify the credentials through the authentication DAO.
+// Verifies credentials through the authentication DAO.
 passport.use(new LocalStrategy(async (username, password, done) => {
     try {
         const user = await getUser(username, password);
@@ -33,12 +31,12 @@ passport.use(new LocalStrategy(async (username, password, done) => {
     }
 }));
 
-// Store only the account ID in the session.
+// Stores only the account ID in the session.
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });
 
-// Restore the account and its associated counter.
+// Restores the account and its associated counter.
 passport.deserializeUser(async (id, done) => {
     try {
         const user = await getUserById(id);
@@ -81,7 +79,7 @@ app.use(passport.session());
 
 /* AUTHENTICATION */
 
-// Authenticate the officer and create a session.
+// Authenticates the officer and creates a session.
 app.post("/api/sessions", (req, res, next) => {
     const { username, password } = req.body ?? {};
 
@@ -122,7 +120,7 @@ app.post("/api/sessions", (req, res, next) => {
     })(req, res, next);
 });
 
-// Restore the current authenticated account.
+// Restores the current authenticated account.
 app.get("/api/sessions/current", (req, res) => {
     if (!req.isAuthenticated()) {
         return res.status(401).json({
@@ -133,7 +131,7 @@ app.get("/api/sessions/current", (req, res) => {
     res.json(req.user);
 });
 
-// Destroy the session and remove its cookie.
+// Destroys the session and removes its cookie.
 app.delete("/api/sessions/current", (req, res) => {
     req.logout((err) => {
         if (err) {
@@ -229,7 +227,7 @@ app.post("/api/tickets", async (req, res) => {
 /**
  * Serves the next waiting customer for a counter.
  */
-export function registerNextCustomerRoute(app, { db, assignNextTicket }) {
+function registerNextCustomerRoute(app, { db, assignNextTicket }) {
     app.post("/api/counters/:counterId/next", async (req, res) => {
         if (!req.isAuthenticated()) {
             return res.status(401).json({
@@ -297,4 +295,7 @@ export function registerNextCustomerRoute(app, { db, assignNextTicket }) {
 
 registerNextCustomerRoute(app, { db, assignNextTicket });
 
-export default app;
+export {
+    app as default,
+    registerNextCustomerRoute
+};

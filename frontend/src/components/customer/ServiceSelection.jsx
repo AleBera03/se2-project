@@ -14,7 +14,6 @@ function ServiceSelection(props) {
 
     return (
         <Row className="g-4">
-
             {services.map((service) => {
                 const isSelected = service.id === selectedServiceId;
 
@@ -26,7 +25,6 @@ function ServiceSelection(props) {
                             }`}
                         >
                             <Card.Body className="d-flex flex-column gap-3">
-
                                 <Card.Title as="h2" className="h5">
                                     {service.name}
                                 </Card.Title>
@@ -59,13 +57,11 @@ function ServiceSelection(props) {
                                         isSelected ? "Selected" : "Select service"
                                     )}
                                 </Button>
-
                             </Card.Body>
                         </Card>
                     </Col>
                 );
             })}
-
         </Row>
     );
 }

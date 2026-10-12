@@ -1,8 +1,8 @@
-import { useNextCustomerLogic } from "../../hooks/useNextCustomerLogic";
 import { Button, Card, Col, Row, Alert, Spinner } from "react-bootstrap";
 
-function NextCustomer(props) {
+import { useNextCustomerLogic } from "../../hooks/useNextCustomerLogic";
 
+function NextCustomer(props) {
     const { counterId = 1 } = props;
 
     const {

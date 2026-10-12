@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
+
 import { run, get, all } from '../helpers/testDb.js';
 import { assignNextTicket } from '../../queueService.js';
 import { createTicket } from '../../dao/ticket-dao.js';
 
-// fixtures
-// counter 1 -> services 1 (5 min) 2 (7 min)
-// counter 2 -> services 2, 3 (15 min)
+// Fixtures: Counter 1 serves services 1 and 2; Counter 2 serves services 2 and 3. No tickets are initially present.
+
+/**
+ * Creates waiting tickets with optional custom creation timestamps.
+ */
 const addWaiting = async (serviceId, count = 1, createdAt) => {
   for (let i = 0; i < count; i++) {
     const ticket = await createTicket(serviceId);
@@ -18,6 +21,10 @@ const addWaiting = async (serviceId, count = 1, createdAt) => {
     }
   }
 };
+
+/**
+ * Retrieves ticket fields used to verify assignments.
+ */
 const tickets = () => all('SELECT id, service_id, status, counter_id FROM Ticket ORDER BY id');
 
 describe('assignNextTicket', () => {
@@ -75,7 +82,7 @@ describe('assignNextTicket', () => {
   it('preserves a concurrent new ticket when assignment rolls back', async () => {
     const original = await createTicket(1);
 
-    // Integration test: force an assignment failure in the real database.
+    // Forces an assignment failure to verify rollback isolation.
     await run(`
       CREATE TEMP TRIGGER fail_ticket_assignment
       BEFORE UPDATE OF status ON Ticket
@@ -164,5 +171,4 @@ describe('assignNextTicket', () => {
       },
     ]);
   });
-
 });

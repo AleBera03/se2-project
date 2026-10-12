@@ -1,17 +1,14 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import OfficerProvider from "./context/OfficerProvider";
-
 import Layout from "./components/layout/Layout";
 import OfficerNavbar from "./components/officer/OfficerNavbar";
-
 import CustomerPage from "./pages/CustomerPage";
 import OfficerPage from "./pages/OfficerPage";
 
 function App() {
     return (
         <Routes>
-            {/* Public customer pages. */}
             <Route element={<Layout />}>
                 <Route
                     path="/"
@@ -29,7 +26,6 @@ function App() {
                 />
             </Route>
 
-            {/* Share authentication between the officer page and navbar. */}
             <Route
                 element={
                     <OfficerProvider>

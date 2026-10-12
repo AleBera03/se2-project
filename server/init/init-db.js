@@ -1,9 +1,3 @@
-/**
- * Inserts the sample configuration into an empty database.
- *
- * Called by db.js after the tables have been created.
- * Existing configuration and tickets are preserved.
- */
 const services = [
     {
         id: 1,
@@ -128,7 +122,11 @@ function runQuery(db, sql, params = []) {
     });
 }
 
-export async function initializeData(db) {
+/**
+ * Inserts the sample configuration into an empty database.
+ * Preserves existing configuration and tickets.
+ */
+async function initializeData(db) {
     const counts = await new Promise((resolve, reject) => {
         const sql = `
             SELECT
@@ -205,3 +203,5 @@ export async function initializeData(db) {
         throw err;
     }
 }
+
+export { initializeData };

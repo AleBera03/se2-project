@@ -6,7 +6,7 @@ CREATE TABLE Service (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE CHECK (length(trim(name)) > 0),
     code TEXT NOT NULL UNIQUE
-    CHECK (length(code) = 1 AND code GLOB '[A-Z]'),
+        CHECK (length(code) = 1 AND code GLOB '[A-Z]'),
     service_time REAL NOT NULL CHECK (service_time > 0)
 );
 
@@ -32,7 +32,7 @@ CREATE TABLE CounterService (
 CREATE TABLE Ticket (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     daily_number INTEGER NOT NULL DEFAULT 0
-    CHECK (daily_number BETWEEN 0 AND 999),
+        CHECK (daily_number BETWEEN 0 AND 999),
     ticket_date TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d', 'now')),
     code TEXT NOT NULL,
     service_id INTEGER NOT NULL REFERENCES Service(id),

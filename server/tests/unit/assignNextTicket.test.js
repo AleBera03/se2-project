@@ -1,13 +1,6 @@
-// Unit tests: DAO and transaction dependencies are mocked.
-// SQL ordering, rollback and concurrency are covered by integration tests.
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  assignTicket,
-  getCounterQueues,
-  getFirstWaitingTicket,
-} from '../../dao/ticket-dao.js';
+import { assignTicket, getCounterQueues, getFirstWaitingTicket } from '../../dao/ticket-dao.js';
 import { transaction } from '../../db.js';
 import { assignNextTicket } from '../../queueService.js';
 
@@ -25,7 +18,7 @@ describe('assignNextTicket — unit tests', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
-    // Execute the callback without opening a real transaction.
+    // Executes the callback without opening a real transaction.
     vi.mocked(transaction).mockImplementation(
       async (callback) => callback()
     );
