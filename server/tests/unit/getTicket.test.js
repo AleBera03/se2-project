@@ -1,6 +1,3 @@
-// Unit tests: database queries and transactions are mocked.
-// Real persistence, daily reset and concurrency are tested in integration tests.
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import db, { runAsync, transaction } from '../../db.js';
