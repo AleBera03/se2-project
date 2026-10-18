@@ -12,16 +12,17 @@ sections:
 
 ### Macro statistics
 
-- Number of stories committed vs done 
-- Total points committed vs done 
-- Nr of hours planned vs spent (as a team)
+- Number of stories committed vs done: **2 committed / 2 done** *(Story #1: Get Ticket, Story #2: Next Customer)*
+- Total points committed vs done: **13 committed / 13 done**
+- Nr of hours planned vs spent (as a team): **52.00 h planned / 51.42 h spent** *(52h 00m planned vs 51h 25m actual)*
 
 **Remember**  a story is done ONLY if it fits the Definition of Done:
  
-- Unit Tests passing
-- Code review completed
-- Code present on Git
-- End-to-End tests performed
+- Unit Tests passing: automated unit tests written and passing for DAO logic and API routes.
+- Code review completed: PR reviewed and approved on GitHub by at least one teammate.
+- Code present on Git: all feature commits merged into `main` with proper commit messages.
+- End-to-End tests performed: manual integration flow verified (Customer UI -> API -> DB -> Officer UI).
+
 
 > Please refine your DoD 
 
