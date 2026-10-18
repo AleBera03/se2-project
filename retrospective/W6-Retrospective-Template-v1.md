@@ -57,18 +57,18 @@ sections:
   
 ## QUALITY MEASURES 
 
-- Unit Testing:
-  - Total hours estimated
-  - Total hours spent
-  - Nr of automated unit test cases 
-  - Coverage
-- E2E testing:
-  - Total hours estimated
-  - Total hours spent
-  - Nr of test cases
-- Code review 
-  - Total hours estimated 
-  - Total hours spent  
+- Unit Testing: *(OQM-15 Get Ticket, OQM-28 Next Customer)*
+  - Total hours estimated: **3.00 h**
+  - Total hours spent: **1.00 h**
+  - Nr of automated unit test cases: **54** *(123 automated tests in total, all passing)*
+  - Coverage: **80.56% statements / 73.85% branches / 91.04% functions / 81.15% lines** *(backend, Vitest + v8)*
+- E2E testing: *(OQM-22 Get Ticket, OQM-29 Next Customer)*
+  - Total hours estimated: **4.00 h** *
+  - Total hours spent: **3.50 h**
+  - Nr of test cases: **69 automated integration/API tests + 2 manual E2E flows** *(Customer UI -> API -> DB -> Officer UI, one per story)*
+- Code review: *(OQM-16 Get Ticket, OQM-30 Next Customer, OQM-36 Setup)*
+  - Total hours estimated: **3.50 h**
+  - Total hours spent: **5.42 h**
 
 
 ## ASSESSMENT
